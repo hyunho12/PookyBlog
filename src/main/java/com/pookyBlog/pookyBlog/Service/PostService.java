@@ -7,7 +7,7 @@ import com.pookyBlog.pookyBlog.Dto.Response.PostResponse;
 import com.pookyBlog.pookyBlog.Entity.Post;
 import com.pookyBlog.pookyBlog.Repository.PostRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,18 +25,23 @@ public class PostService {
         Post post = Post.builder()
                 .title(postCreate.getTitle())
                 .content(postCreate.getContent())
+                .writer(postCreate.getWriter())
                 .build();
         postRepository.save(post);
     }
 
     public PostResponse get(Long postId) {
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdWithComments(postId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 id입니다."));
 
         return PostResponse.builder()
                 .id(post.getId())
                 .title(post.getTitle())
                 .content(post.getContent())
+                .writer(post.getWriter())
+                .createdDate(post.getCreatedDate())
+                .view(post.getView())
+                .comments(post.getComments())
                 .build();
     }
 
@@ -46,13 +51,17 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    public Page<Post> getAllPostsWithPagination(PostSearch postSearch, Pageable pageable) {
+        return postRepository.getAllListWithPagination(postSearch, pageable);
+    }
+
     @Transactional
     public void update(Long postId, PostUpdate postUpdate) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 id입니다."));
 
         post.update(postUpdate.getTitle() != null ? postUpdate.getTitle() : post.getTitle(),
-                    postUpdate.getContent() != null ? postUpdate.getContent() : postUpdate.getContent());
+                    postUpdate.getContent() != null ? postUpdate.getContent() : post.getContent());
     }
 
     public void delete(Long postId) {

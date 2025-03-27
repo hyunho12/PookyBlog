@@ -1,0 +1,23 @@
+{{>layout/header}}
+<div id="posts_list">
+    <div class="container col-md-4">
+        <form id="login-form">
+            <div class="form-group">
+                <label>아이디</label>
+                <input type="text" id="username" class="form-control" placeholder="아이디를 입력해주세요"/>
+                <span id="valid_username" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label>비밀번호</label>
+                <input type="password" id="password" class="form-control" placeholder="비밀번호를 입력해주세요"/>
+                <span id="valid_password" class="text-danger"></span>
+            </div>
+
+            <span id="error-message" class="text-danger"></span>
+
+            <button type="button" id="btn-login" class="btn btn-primary">로그인</button>
+        </form>
+    </div>
+</div>
+{{>layout/footer}}

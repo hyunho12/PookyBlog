@@ -14,9 +14,12 @@ public class PostCreate {
     @NotBlank(message = "내용을 입력하세요")
     private String content;
 
+    private String writer;
+
     @Builder
-    public PostCreate(String title, String content) {
+    public PostCreate(String title, String content, String writer) {
         this.title = title;
         this.content = content;
+        this.writer = writer;
     }
 }
