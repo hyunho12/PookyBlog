@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management'
+}
+
+dependencies {
+    implementation project(':common')
+    implementation project(':services:post')
+    implementation project(':services:user')
+    implementation 'mysql:mysql-connector-java:8.0.33'
+}
+
+bootJar{
+    enabled = true
+}
+jar{
+    enabled = false
+}
+//springBoot{
+//    mainClass = 'pookyBlog.CommentApplication'
+//}
+tasks.named("bootJar") {
+    manifest {
+        attributes("Main-Class": "pookyBlog.CommentApplication")
+    }
+}

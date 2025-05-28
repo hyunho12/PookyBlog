@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.0' // Spring Boot 플러그인 추가
+    id 'io.spring.dependency-management'
+}
+dependencies {
+    implementation project(':common')
+    implementation project(':common:snowflake')
+    implementation project(':services:user')
+    implementation 'mysql:mysql-connector-java:8.0.33'
+}
+bootJar{
+    enabled = true
+}
+//springBoot{
+//    mainClass = 'pookyBlog.PostApplication'
+//}
+tasks.named("bootJar") {
+    manifest {
+        attributes("Main-Class": "pookyBlog.PostApplication")
+    }
+}

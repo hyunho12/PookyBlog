@@ -14,78 +14,96 @@ java {
 	}
 }
 
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-
-	asciidoctorExt
-}
-
-repositories {
-	mavenCentral()
-}
-
-ext{
-	asciidocVersion = "3.0.3.RELEASE"
-	snippetsDir = file('build/generated-snippets')
-}
-
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-	implementation 'org.springframework.boot:spring-boot-starter-mustache'
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-
-    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-
-	implementation 'com.querydsl:querydsl-core'
-	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-
-	asciidoctorExt "org.springframework.restdocs:spring-restdocs-asciidoctor:"
-	testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:"
-
-	annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
-	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-
-	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	runtimeOnly 'com.h2database:h2'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-test {
-	outputs.dir snippetsDir
-}
-
-asciidoctor {
-	inputs.dir snippetsDir
-	configurations 'asciidoctorExt'
-	dependsOn test
-}
-
-asciidoctor.doFirst {
-	delete file("src/main/resources/static/docs")
-}
-
-bootJar {
-	dependsOn asciidoctor
-
-	copy {
-		from asciidoctor.outputDir
-		into "src/main/resources/static/docs"
+allprojects {
+	repositories {
+		mavenCentral()
 	}
 }
+
+subprojects {
+	apply plugin: 'java'
+    apply plugin: 'org.springframework.boot'
+	apply plugin: 'io.spring.dependency-management'
+	apply plugin: 'org.asciidoctor.jvm.convert'
+
+	configurations {
+		compileOnly {
+			extendsFrom annotationProcessor
+		}
+		asciidoctorExt
+	}
+	configurations {
+		asciidoctorExt
+	}
+	ext{
+		asciidocVersion = "3.0.3.RELEASE"
+		snippetsDir = file('build/generated-snippets')
+	}
+
+	dependencies {
+		implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+		implementation 'org.springframework.boot:spring-boot-starter-web'
+		implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+		implementation 'org.springframework.boot:spring-boot-starter-mustache'
+		implementation 'org.springframework.boot:spring-boot-starter-security'
+
+		implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+		implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+		implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+
+		implementation 'com.querydsl:querydsl-core'
+		implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+
+		asciidoctorExt "org.springframework.restdocs:spring-restdocs-asciidoctor:3.0.0"
+		testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:3.0.0"
+		testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:"
+
+		annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+		annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+		annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+
+		compileOnly 'org.projectlombok:lombok'
+		developmentOnly 'org.springframework.boot:spring-boot-devtools'
+		annotationProcessor 'org.projectlombok:lombok'
+		testImplementation 'org.springframework.boot:spring-boot-starter-test'
+		testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	}
+
+	tasks.named('test') {
+		useJUnitPlatform()
+	}
+
+	test {
+		outputs.dir snippetsDir
+	}
+
+	asciidoctor {
+		inputs.dir snippetsDir
+		configurations 'asciidoctorExt'
+		dependsOn test
+	}
+
+	asciidoctor.doFirst {
+		delete file("src/main/resources/static/docs")
+	}
+
+	bootJar {
+		dependsOn asciidoctor
+
+		copy {
+			from asciidoctor.outputDir
+			into "src/main/resources/static/docs"
+		}
+	}
+}
+bootJar{
+	enabled = false
+}
+jar{
+	enabled = true
+}
+
+
 
 

@@ -1,0 +1,27 @@
+server:
+  port: 8086
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.11:3307/pookydb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: pooky
+    password: pooky@#4002511
+
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: none # ❗ web 모듈은 DB에 직접 쓰지 않으므로 none 또는 validate
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+
+
+jwt:
+  secret: "AmKMSyFs3PLnjnUJ+eVEQhushSxVP304msrFm4rj6PA="
+  expiration: 86400000 #1일
+
+logging:
+  level:
+    org.springframework.web: debug

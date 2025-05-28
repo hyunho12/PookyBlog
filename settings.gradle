@@ -1,1 +1,12 @@
 rootProject.name = 'pookyBlog'
+
+include 'common'
+include 'common:snowflake'
+include 'services'
+include 'services:post'
+include 'services:comment'
+include 'services:user'
+include 'services:hot-post'
+include 'services:like'
+include 'services:view'
+include 'web'

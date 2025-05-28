@@ -1,0 +1,25 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management'
+}
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-mustache'
+
+    implementation project(':services:post')
+    implementation project(':services:comment')
+    implementation project(':services:user')
+    implementation project(':common')
+}
+bootJar{
+    enabled = true
+}
+jar{
+    enabled = false
+}
+tasks.named("bootJar") {
+    manifest {
+        attributes("Main-Class": "pookyBlog.WebApplication")
+    }
+}

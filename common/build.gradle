@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+    //id 'org.springframework.boot' version '3.4.0'
+    id 'io.spring.dependency-management'
+}
+
+bootJar{
+    enabled = false
+}
+
+jar{
+    enabled = true
+}
