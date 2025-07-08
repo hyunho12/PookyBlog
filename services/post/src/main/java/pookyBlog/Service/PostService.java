@@ -14,8 +14,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pookyBlog.common.outboxmessage.OutboxEventPublisher;
+import pookyBlog.common.outboxmessage.OutboxRepository;
 import pookyBlog.common.snowflake.Snowflake;
+import pookyBlog.event.EventType;
+import pookyBlog.event.payload.PostCreatedEventPayload;
+import pookyBlog.event.payload.PostUnlikedEventPayload;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,6 +32,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostCountRepository postCountRepository;
     private final Snowflake snowflake;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     public void write(PostCreate postCreate){
         Post post = Post.builder()
@@ -36,6 +44,19 @@ public class PostService {
         postRepository.save(post);
         postCountRepository.save(new PostCount(post.getId(), 0L));
         postCountRepository.increasePostCount(post.getId());
+
+        outboxEventPublisher.publish(
+                EventType.POST_CREATED,
+                PostCreatedEventPayload.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .writer(post.getWriter())
+                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .build(),
+                0L
+        );
     }
 
     public PostResponse get(Long postId) {
@@ -74,6 +95,19 @@ public class PostService {
 
         post.update(postUpdate.getTitle() != null ? postUpdate.getTitle() : post.getTitle(),
                     postUpdate.getContent() != null ? postUpdate.getContent() : post.getContent());
+
+        outboxEventPublisher.publish(
+                EventType.POST_CREATED,
+                PostCreatedEventPayload.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .writer(post.getWriter())
+                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .build(),
+                0L
+        );
     }
 
     public void delete(Long postId) {
@@ -83,6 +117,19 @@ public class PostService {
         postRepository.delete(post);
         postCountRepository.deleteById(post.getId());
         postCountRepository.decreasePostCount(postId);
+
+        outboxEventPublisher.publish(
+                EventType.POST_DELETED,
+                PostCreatedEventPayload.builder()
+                        .postId(post.getId())
+                        .title(post.getTitle())
+                        .content(post.getContent())
+                        .writer(post.getWriter())
+                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .build(),
+                0L
+        );
     }
 
     public Long count(Long postId){

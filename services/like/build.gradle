@@ -6,6 +6,7 @@ plugins {
 dependencies {
     implementation project(':common')
     implementation project(':common:snowflake')
+    implementation project(':common:outboxmessage')
     implementation project(':services:user')
     implementation project(':services:post')
     implementation 'mysql:mysql-connector-java:8.0.33'

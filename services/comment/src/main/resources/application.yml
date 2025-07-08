@@ -21,6 +21,14 @@ spring:
         format_sql: true
         show_sql: true
 
+  data:
+    redis:
+      host: 192.168.0.11
+      port: 6379
+
+  kafka:
+    bootstrap-servers: 192.168.0.11:9092
+
 logging:
   level:
     org.hibernate.SQL: debug # logger에 출력하려면

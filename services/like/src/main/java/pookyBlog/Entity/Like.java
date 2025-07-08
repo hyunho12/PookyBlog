@@ -2,8 +2,10 @@ package pookyBlog.Entity;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @NoArgsConstructor
 @Builder
 @Table(name = "post_like")
