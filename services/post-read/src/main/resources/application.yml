@@ -1,0 +1,31 @@
+server:
+  port: 8086
+  servlet:
+    encoding:
+      force-response: true
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.0.11:3307/pookydb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Seoul
+    username: pooky
+    password: pooky@#4002511
+  data:
+    redis:
+      host: 192.168.0.11
+      port: 6379
+  kafka:
+    bootstrap-servers: 192.168.0.11:9092
+    consumer:
+      group-id: pookyBlog-board-post-read-service
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+  endpoints:
+    pooky-board-post-service:
+      url: http://127.0.0.1:8083
+    pooky-board-comment-service:
+      url: http://127.0.0.1:8080
+    pooky-board-like-service:
+      url: http://127.0.0.1:8082
+    pooky-board-view-service:
+      url: http://127.0.0.1:8085

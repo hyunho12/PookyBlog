@@ -34,6 +34,7 @@ public class PostService {
     private final Snowflake snowflake;
     private final OutboxEventPublisher outboxEventPublisher;
 
+    @Transactional
     public void write(PostCreate postCreate){
         Post post = Post.builder()
                 .id(snowflake.nextId())
@@ -41,19 +42,21 @@ public class PostService {
                 .content(postCreate.getContent())
                 .writer(postCreate.getWriter())
                 .build();
-        postRepository.save(post);
-        postCountRepository.save(new PostCount(post.getId(), 0L));
-        postCountRepository.increasePostCount(post.getId());
+        Post prePost = postRepository.save(post);
+        postCountRepository.save(new PostCount(prePost.getId(), 0L));
+        postCountRepository.increasePostCount(prePost.getId());
 
         outboxEventPublisher.publish(
                 EventType.POST_CREATED,
                 PostCreatedEventPayload.builder()
-                        .postId(post.getId())
-                        .title(post.getTitle())
-                        .content(post.getContent())
-                        .writer(post.getWriter())
-                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
-                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .postId(prePost.getId())
+                        .title(prePost.getTitle())
+                        .content(prePost.getContent())
+                        .writer(prePost.getWriter())
+                        .createdAt(LocalDateTime.now())
+                        .updatedAt(LocalDateTime.now())
+//                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+//                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
                         .build(),
                 0L
         );

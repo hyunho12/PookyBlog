@@ -21,4 +21,6 @@ public class CommentRepositoryImpl implements CommentRepositoryCustom{
                 .orderBy(comment.id.asc()) // 댓글을 ID 기준 오름차순 정렬
                 .fetch();
     }
+
+
 }

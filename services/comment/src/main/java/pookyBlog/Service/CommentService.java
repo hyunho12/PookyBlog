@@ -92,4 +92,9 @@ public class CommentService {
                 0L
         );
     }
+
+    @Transactional(readOnly = true)
+    public Long count(Long postId){
+        return commentRepository.countByPosts_Id(postId);
+    }
 }

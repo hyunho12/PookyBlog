@@ -44,5 +44,4 @@ public class HotPostScoreUpdater {
     private boolean isPostCreatedToday(LocalDateTime createTime){
         return createTime != null && createTime.toLocalDate().equals(LocalDate.now());
     }
-
 }

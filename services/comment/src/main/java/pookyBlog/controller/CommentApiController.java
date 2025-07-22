@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pookyBlog.Service.PostService;
 
 import java.util.List;
 
@@ -38,5 +39,10 @@ public class CommentApiController {
     public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
         commentService.delete(commentId);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/comments/post/{postId}/count")
+    public Long count(@PathVariable("postId") Long postId){
+        return commentService.count(postId);
     }
 }

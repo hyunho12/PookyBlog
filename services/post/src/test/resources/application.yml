@@ -1,13 +1,8 @@
-server:
-  port: 8080
-  servlet:
-    encoding:
-      force-response: true
-
+# src/test/resources/application.yml
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.0.11:3307/pookydb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.0.11:3307/pookydb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Seoul
     username: pooky
     password: pooky@#4002511
 
@@ -20,22 +15,16 @@ spring:
         use_sql_comments: true
         format_sql: true
         show_sql: true
-
-  application:
-    name: pooky-blog-service
+  kafka:
+    bootstrap-servers: 192.168.0.11:9092
 
   data:
     redis:
       host: 192.168.0.11
       port: 6379
 
-  kafka:
-    bootstrap-servers: 192.168.0.11:9092
-
-logging:
-  level:
-    org.hibernate.SQL: debug # logger에 출력하려면
-    org.hibernate.type.descriptor.sql: trace # 파라미터 값 출력
+  application:
+    name: pooky-blog-service
 
 jwt:
   secret: "AmKMSyFs3PLnjnUJ+eVEQhushSxVP304msrFm4rj6PA="

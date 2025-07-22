@@ -9,6 +9,9 @@ dependencies {
     implementation project(':common:outboxmessage')
     implementation project(':services:user')
     implementation 'mysql:mysql-connector-java:8.0.33'
+
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.awaitility:awaitility:4.2.0' // 또는 최신 버전
 }
 bootJar{
     enabled = true

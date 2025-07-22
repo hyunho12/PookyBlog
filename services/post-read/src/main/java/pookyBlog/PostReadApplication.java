@@ -2,12 +2,10 @@ package pookyBlog;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.scheduling.annotation.EnableScheduling;
 
-@EnableScheduling
 @SpringBootApplication
-public class PostApplication {
+public class PostReadApplication {
     public static void main(String[] args) {
-        SpringApplication.run(PostApplication.class, args);
+        SpringApplication.run(PostReadApplication.class, args);
     }
 }

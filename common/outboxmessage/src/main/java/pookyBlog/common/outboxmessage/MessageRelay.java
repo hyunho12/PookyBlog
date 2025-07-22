@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -20,6 +21,7 @@ public class MessageRelay { // outbox테이블에서 outbox을꺼내 kafka로 �
     private final OutboxRepository outboxRepository;
     private final MessageRelayCoordinator messageRelayCoordinator;
     private final KafkaTemplate<String, String> messageRelayKafkaTemplate;
+    private final OutboxDeleteService outboxDeleteService;
 
     // DB 트랜잭션이 커밋되기 직전에 Outbox 데이터를 DB에 저장
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
@@ -28,6 +30,7 @@ public class MessageRelay { // outbox테이블에서 outbox을꺼내 kafka로 �
         outboxRepository.save(outboxEvent.getOutbox());
     }
 
+    //@Async("messageRelayPublishEventExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void publishEvent(OutboxEvent outboxEvent){
         publishEvent(outboxEvent.getOutbox());
@@ -41,7 +44,10 @@ public class MessageRelay { // outbox테이블에서 outbox을꺼내 kafka로 �
                     String.valueOf(outbox.getShardKey()),
                     outbox.getPayload()
             ).get(1, TimeUnit.SECONDS);
-            outboxRepository.delete(outbox);
+            log.info("Deleting outbox id: {}", outbox.getOutboxId());
+            //outboxRepository.delete(outbox);
+            outboxDeleteService.deleteOutbox(outbox);
+            log.info("[MessageRelay.publishEvent] Success: outboxId={}", outbox.getOutboxId());
         } catch (Exception e){
             log.error("[MessageRelay.publishEvent] outbox={}",outbox,e);
         }

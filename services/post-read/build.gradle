@@ -20,6 +20,6 @@ bootJar{
 //}
 tasks.named("bootJar") {
     manifest {
-        attributes("Main-Class": "pookyBlog.HotPostApplication")
+        attributes("Main-Class": "pookyBlog.PostReadApplication")
     }
 }
