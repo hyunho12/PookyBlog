@@ -2,12 +2,11 @@ package pookyBlog.Service.eventhandler;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.Repository.PostCreatedTimeRepository;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventType;
-import pookyBlog.event.payload.PostDeletedEventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.PostDeletedEventPayload;
 
 @Component
 @RequiredArgsConstructor

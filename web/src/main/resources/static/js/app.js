@@ -88,7 +88,13 @@ const main = {
                 dataType: 'JSON',
                 contentType: 'application/json; charset=utf-8',
                 xhrFields: { withCredentials: true }, // 쿠키 포함
-                data: JSON.stringify(data)
+                data: JSON.stringify(data),
+                beforeSend: function (xhr) {
+                    const token = localStorage.getItem('jwtToken');
+                    if (token) {
+                        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    }
+                }
             }).done(function () {
                 alert('등록되었습니다.');
                 window.location.href = '/';
@@ -213,14 +219,20 @@ const main = {
 
         $.ajax({
             type: 'POST',
-            url: '/auth/login',
+            url: '/api/auth/login',
             dataType: 'JSON',
             contentType: 'application/json; charset=utf-8',
             data: JSON.stringify(data),
-            xhrFields: { withCredentials: true } // 쿠키 포함
-        }).done(function () {
-            alert("로그인 성공!");
-            window.location.href = '/';
+            //xhrFields: { withCredentials: true } // 쿠키 포함
+        }).done(function (response) {
+            if (response.accessToken) {
+                // 응답으로 받은 accessToken을 localStorage에 저장
+                localStorage.setItem('jwtToken', response.accessToken);
+                alert("로그인 성공!");
+                window.location.href = '/';
+            } else {
+                $('#error-message').text("로그인에 성공했으나 토큰을 받지 못했습니다.");
+            }
         }).fail(function (error) {
             if (error.responseJSON && error.responseJSON.message) {
                 $('#error-message').text(error.responseJSON.message);
@@ -238,6 +250,7 @@ const main = {
             contentType: 'application/json; charset=utf-8',
             xhrFields: { withCredentials: true } // 쿠키 포함
         }).done(function () {
+            localStorage.removeItem('jwtToken');
             alert("로그아웃 되었습니다.");
             window.location.href = '/';
         }).fail(function (error) {
@@ -264,7 +277,7 @@ const main = {
         } else {
             $.ajax({
                 type: 'POST',
-                url: '/comments/create',
+                url: '/api/comments/create',
                 dataType: 'JSON',
                 contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify(data)

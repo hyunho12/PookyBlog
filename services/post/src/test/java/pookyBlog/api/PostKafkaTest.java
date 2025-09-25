@@ -7,7 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.Commit;
 import org.springframework.web.client.RestClient;
-import pookyBlog.Dto.Request.PostCreate;
+import pookyBlog.common.Dto.Request.PostCreate;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

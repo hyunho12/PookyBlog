@@ -2,13 +2,13 @@ package pookyBlog.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.Service.eventhandler.EventHandler;
 import pookyBlog.Service.response.HotPostResponse;
+import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.client.PostClient;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventPayload;
-import pookyBlog.event.EventType;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventPayload;
+import pookyBlog.common.event.EventType;
 
 import java.util.List;
 import java.util.Objects;

@@ -3,7 +3,7 @@ package pookyBlog.common.outboxmessage;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.ToString;
-import pookyBlog.event.EventType;
+import pookyBlog.common.event.EventType;
 
 import java.time.LocalDateTime;
 

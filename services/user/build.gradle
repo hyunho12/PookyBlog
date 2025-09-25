@@ -7,6 +7,8 @@ dependencies {
     implementation project(':common')
     implementation project(':common:snowflake')
     implementation 'mysql:mysql-connector-java:8.0.33'
+
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 }
 bootJar{
     enabled = true
@@ -16,6 +18,6 @@ bootJar{
 //}
 tasks.named("bootJar") {
     manifest {
-        attributes("Main-Class": "pookyBlog.UserApplication")
+        attributes("Main-Class": "pookyBlog.user.UserApplication")
     }
 }

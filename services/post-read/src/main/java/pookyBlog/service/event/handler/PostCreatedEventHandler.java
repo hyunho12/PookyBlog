@@ -2,9 +2,9 @@ package pookyBlog.service.event.handler;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventType;
-import pookyBlog.event.payload.PostCreatedEventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.PostCreatedEventPayload;
 import pookyBlog.repository.PostQueryModel;
 import pookyBlog.repository.PostQueryModelRepository;
 

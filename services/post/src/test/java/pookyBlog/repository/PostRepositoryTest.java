@@ -7,11 +7,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import pookyBlog.Dto.Request.PostSearch;
-import pookyBlog.Dto.Response.PostIndexResponse;
-import pookyBlog.PostApplication;
-import pookyBlog.Repository.PostRepositoryImpl;
-import pookyBlog.Service.PostService;
+import pookyBlog.common.Dto.Request.PostSearch;
+import pookyBlog.common.Dto.Response.PostIndexResponse;
+import pookyBlog.post.PostApplication;
+import pookyBlog.post.Repository.PostRepositoryImpl;
+import pookyBlog.post.Service.PostService;
 
 import java.util.List;
 

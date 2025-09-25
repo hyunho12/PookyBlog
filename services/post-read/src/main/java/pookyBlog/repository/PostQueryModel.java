@@ -1,7 +1,7 @@
 package pookyBlog.repository;
 
 import lombok.Getter;
-import pookyBlog.event.payload.*;
+import pookyBlog.common.event.payload.*;
 import pookyBlog.response.PostResponse;
 
 import java.time.LocalDateTime;

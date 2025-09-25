@@ -3,9 +3,9 @@ package pookyBlog.Service.eventhandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pookyBlog.Repository.PostViewCountRepository;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventType;
-import pookyBlog.event.payload.PostViewedEventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.PostViewedEventPayload;
 import pookyBlog.utils.TimeCalculatorUtils;
 
 @Component

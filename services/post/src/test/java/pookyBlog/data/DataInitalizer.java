@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.support.TransactionTemplate;
-import pookyBlog.Entity.Post;
-import pookyBlog.PostApplication;
+import pookyBlog.common.Entity.Post;
 import pookyBlog.common.snowflake.Snowflake;
+import pookyBlog.post.PostApplication;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;

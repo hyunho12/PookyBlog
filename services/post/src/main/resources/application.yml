@@ -7,7 +7,7 @@ server:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.0.11:3307/pookydb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Seoul
+    url: jdbc:mysql://192.168.0.11:3307/pookydb?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
     username: pooky
     password: pooky@#4002511
 

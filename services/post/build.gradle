@@ -9,6 +9,7 @@ dependencies {
     implementation project(':common:outboxmessage')
     implementation project(':services:user')
     implementation 'mysql:mysql-connector-java:8.0.33'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     testImplementation 'org.springframework.security:spring-security-test'
     testImplementation 'org.awaitility:awaitility:4.2.0' // 또는 최신 버전
@@ -21,6 +22,6 @@ bootJar{
 //}
 tasks.named("bootJar") {
     manifest {
-        attributes("Main-Class": "pookyBlog.PostApplication")
+        attributes("Main-Class": "pookyBlog.post.PostApplication")
     }
 }

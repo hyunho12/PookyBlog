@@ -10,12 +10,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.Repository.PostCreatedTimeRepository;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventPayload;
-import pookyBlog.event.EventType;
-import pookyBlog.event.payload.CommentCreatedEventPayload;
-import pookyBlog.event.payload.PostLikedEventPayload;
-import pookyBlog.event.payload.PostViewedEventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventPayload;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.CommentCreatedEventPayload;
+import pookyBlog.common.event.payload.PostLikedEventPayload;
+import pookyBlog.common.event.payload.PostViewedEventPayload;
 import pookyBlog.utils.TimeCalculatorUtils;
 
 import java.time.LocalDate;

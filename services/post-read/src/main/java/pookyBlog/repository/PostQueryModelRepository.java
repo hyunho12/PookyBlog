@@ -3,7 +3,7 @@ package pookyBlog.repository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
-import pookyBlog.dataserializer.DataSerializer;
+import pookyBlog.common.dataserializer.DataSerializer;
 
 import java.time.Duration;
 import java.util.Optional;

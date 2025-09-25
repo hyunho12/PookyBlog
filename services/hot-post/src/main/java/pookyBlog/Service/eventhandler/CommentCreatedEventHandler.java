@@ -3,9 +3,9 @@ package pookyBlog.Service.eventhandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import pookyBlog.Repository.HotCommentCountRepository;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventType;
-import pookyBlog.event.payload.CommentCreatedEventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.CommentCreatedEventPayload;
 import pookyBlog.utils.TimeCalculatorUtils;
 
 @Component

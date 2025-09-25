@@ -2,11 +2,11 @@ package pookyBlog.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import pookyBlog.Service.eventhandler.EventHandler;
 import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.Repository.PostCreatedTimeRepository;
-import pookyBlog.Service.eventhandler.EventHandler;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventPayload;
 
 import java.time.Duration;
 import java.time.LocalDate;

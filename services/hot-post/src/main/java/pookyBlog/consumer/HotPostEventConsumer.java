@@ -6,9 +6,9 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import pookyBlog.Service.HotPostService;
-import pookyBlog.event.Event;
-import pookyBlog.event.EventPayload;
-import pookyBlog.event.EventType;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventPayload;
+import pookyBlog.common.event.EventType;
 
 @Slf4j
 @Component

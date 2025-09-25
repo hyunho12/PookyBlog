@@ -1,7 +1,7 @@
 package pookyBlog.service.event.handler;
 
-import pookyBlog.event.Event;
-import pookyBlog.event.EventPayload;
+import pookyBlog.common.event.Event;
+import pookyBlog.common.event.EventPayload;
 
 public interface EventHandler<T extends EventPayload> {
     void handle(Event<T> event);
