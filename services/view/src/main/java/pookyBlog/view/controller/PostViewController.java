@@ -1,8 +1,8 @@
-package pookyBlog.controller;
+package pookyBlog.view.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import pookyBlog.Service.PostViewService;
+import pookyBlog.view.Service.PostViewService;
 
 @RequestMapping("/post-view")
 @RestController

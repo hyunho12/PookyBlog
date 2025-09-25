@@ -1,4 +1,4 @@
-package pookyBlog.Repository;
+package pookyBlog.view.Repository;
 
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;

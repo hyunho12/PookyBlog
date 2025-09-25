@@ -1,4 +1,4 @@
-package pookyBlog.Repository;
+package pookyBlog.view.Repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;

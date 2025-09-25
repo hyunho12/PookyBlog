@@ -1,4 +1,4 @@
-package pookyBlog.Repository;
+package pookyBlog.post.Repository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -8,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import pookyBlog.Entity.PostViewCount;
 import pookyBlog.ViewApplication;
+import pookyBlog.view.Repository.PostViewCountBackUpRepository;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 

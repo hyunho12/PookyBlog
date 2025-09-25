@@ -1,9 +1,9 @@
-package pookyBlog.Service;
+package pookyBlog.view.Service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import pookyBlog.Repository.PostViewCountRepository;
 import pookyBlog.Repository.PostViewDistributedLockRepository;
+import pookyBlog.view.Repository.PostViewCountRepository;
 
 import java.time.Duration;
 

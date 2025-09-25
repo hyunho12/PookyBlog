@@ -1,4 +1,4 @@
-package pookyBlog.Entity;
+package pookyBlog.view.Entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
