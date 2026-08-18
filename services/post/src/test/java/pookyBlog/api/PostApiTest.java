@@ -8,13 +8,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.Commit;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import pookyBlog.common.Dto.Request.PostCreate;
 import pookyBlog.common.Dto.Response.PostResponse;
 import pookyBlog.common.outboxmessage.Outbox;
-import pookyBlog.common.outboxmessage.OutboxRepository;
+import pookyBlog.common.outboxmessage.OutboxEvent;
 import pookyBlog.common.snowflake.Snowflake;
 import pookyBlog.common.event.EventType;
 import pookyBlog.common.event.payload.PostCreatedEventPayload;
@@ -22,18 +23,16 @@ import pookyBlog.post.Entity.PostCount;
 import pookyBlog.post.PostApplication;
 import pookyBlog.post.Repository.PostCountRepository;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
 @AutoConfigureMockMvc(addFilters = false)
 @SpringBootTest(classes = PostApplication.class)
+@RecordApplicationEvents
 public class PostApiTest {
     @Autowired
     private Snowflake snowflake;
@@ -48,12 +47,11 @@ public class PostApiTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    private OutboxRepository outboxRepository;
+    private ApplicationEvents applicationEvents;
 
     @Test
-    @DisplayName("게시글생성")
-    @Commit
-    public void createTest() throws Exception{
+    @DisplayName("게시글 생성 API가 POST_CREATED 이벤트와 payload를 발행한다")
+    public void createPost_publishesPostCreatedEventWithPayload() throws Exception{
         //given
         PostCreate postCreate = PostCreate.builder()
                 .title("test1")
@@ -68,25 +66,22 @@ public class PostApiTest {
         ).andExpect(status().isOk());
 
         //then
-        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
-            List<Outbox> outboxes = outboxRepository.findAll();
-            //assertThat(outboxes.isEmpty()).isFalse();
+        Outbox outbox = applicationEvents.stream(OutboxEvent.class)
+                .map(OutboxEvent::getOutbox)
+                .filter(event -> event.getEventType() == EventType.POST_CREATED)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("POST_CREATED outbox event was not published"));
 
-            Outbox outbox = outboxes.get(0);
+        assertThat(outbox.getEventType()).isEqualTo(EventType.POST_CREATED);
 
-            assertThat(outbox.getEventType()).isEqualTo(EventType.POST_CREATED);
+        String jsonPayload = outbox.getPayload();
 
-            String jsonPayload = outbox.getPayload();
+        var innerPayload = objectMapper.readTree(jsonPayload).get("payload");
+        PostCreatedEventPayload payload = objectMapper.treeToValue(innerPayload, PostCreatedEventPayload.class);
 
-            var innerPayload = objectMapper.readTree(jsonPayload).get("payload");
-            PostCreatedEventPayload payload = objectMapper.treeToValue(innerPayload, PostCreatedEventPayload.class);
-
-            assertThat(payload.getTitle()).isEqualTo("test1");
-            assertThat(payload.getContent()).isEqualTo("content1");
-            assertThat(payload.getWriter()).isEqualTo("potter");
-
-            System.out.println(outbox.getPayload());
-        });
+        assertThat(payload.getTitle()).isEqualTo("test1");
+        assertThat(payload.getContent()).isEqualTo("content1");
+        assertThat(payload.getWriter()).isEqualTo("potter");
     }
 
     @Test

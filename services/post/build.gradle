@@ -12,6 +12,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
 
     testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation 'org.springframework.kafka:spring-kafka'
     testImplementation 'org.awaitility:awaitility:4.2.0' // 또는 최신 버전
 }
 bootJar{

@@ -12,7 +12,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(
         scanBasePackages = {"pookyBlog.user", "pookyBlog.common"}
 )
-@EntityScan(basePackages = {"pookyBlog.common.entity", "pookyBlog.post.entity"})
+@EntityScan(basePackages = {"pookyBlog.common.Entity", "pookyBlog.post.Entity"})
 @EnableJpaRepositories(basePackages = "pookyBlog.user.Repository")
 public class UserApplication {
     public static void main(String[] args) {

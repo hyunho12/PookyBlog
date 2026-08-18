@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import pookyBlog.common.outboxmessage.OutboxEventPublisher;
 import pookyBlog.common.event.EventType;
 import pookyBlog.common.event.payload.CommentCreatedEventPayload;
+import pookyBlog.common.event.payload.CommentDeletedEventPayload;
+import pookyBlog.common.snowflake.Snowflake;
 import pookyBlog.user.Repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -26,6 +28,7 @@ public class CommentService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final Snowflake snowflake;
 
     @Transactional
     public Long create(CommentCreate commentCreate){
@@ -41,10 +44,13 @@ public class CommentService {
         User user= userRepository.findById(commentCreate.getUserId()).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
 
         Comment comment = Comment.builder()
+                .id(snowflake.nextId())
                 .posts(post)
                 .user(user)
                 .comments(commentCreate.getComment())
                 .build();
+
+        commentRepository.save(comment);
 
         outboxEventPublisher.publish(
                 EventType.COMMENT_CREATED,
@@ -60,7 +66,7 @@ public class CommentService {
 
         );
 
-        return commentRepository.save(comment).getId();
+        return comment.getId();
     }
 
     public List<Comment> getComment(Long postId){
@@ -80,11 +86,12 @@ public class CommentService {
 
         outboxEventPublisher.publish(
                 EventType.COMMENT_DELETED,
-                CommentCreatedEventPayload.builder()
+                CommentDeletedEventPayload.builder()
                         .commentId(comment.getId())
                         .content(comment.getComments())
                         .postId(comment.getPosts().getId())
-                        .writer(comment.getPosts().getWriter())
+                        .writerId(comment.getUser().getId())
+                        .deleted(true)
                         .createdAt(LocalDateTime.parse(comment.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                         .postCommentCount(commentRepository.countByPosts_Id(comment.getPosts().getId()))
                         .build(),

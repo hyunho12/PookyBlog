@@ -5,6 +5,8 @@ server:
       force-response: true
 
 spring:
+  application:
+    name: pooky-blog-view-service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://192.168.0.11:3307/pookydb?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&characterEncoding=UTF-8&allowPublicKeyRetrieval=true

@@ -19,7 +19,8 @@ public interface LikeRepository extends JpaRepository<Like, Long>, LikeRepositor
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select lc from LikeCount lc where lc.id = :postId")
     Optional<LikeCount> findByIdForUpdate(@Param("postId") Long postId);
-    Optional<LikeCount> findByPostId(Long postId);
+    @Query("select lc from LikeCount lc where lc.id = :postId")
+    Optional<LikeCount> findLikeCountById(@Param("postId") Long postId);
 
     @Modifying
     @Query("update LikeCount lc set lc.likeCount = lc.likeCount + 1 where lc.id = :postId")

@@ -17,6 +17,7 @@ import pookyBlog.common.outboxmessage.OutboxEventPublisher;
 import pookyBlog.common.snowflake.Snowflake;
 import pookyBlog.common.event.EventType;
 import pookyBlog.common.event.payload.PostCreatedEventPayload;
+import pookyBlog.common.event.payload.PostUpdatedEventPayload;
 import pookyBlog.post.Entity.PostCount;
 
 import java.time.LocalDateTime;
@@ -98,12 +99,11 @@ public class PostService {
                     postUpdate.getContent() != null ? postUpdate.getContent() : post.getContent());
 
         outboxEventPublisher.publish(
-                EventType.POST_CREATED,
-                PostCreatedEventPayload.builder()
+                EventType.POST_UPDATED,
+                PostUpdatedEventPayload.builder()
                         .postId(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .writer(post.getWriter())
                         .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
                         .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
                         .build(),

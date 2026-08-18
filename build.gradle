@@ -26,6 +26,12 @@ subprojects {
 	apply plugin: 'io.spring.dependency-management'
 	apply plugin: 'org.asciidoctor.jvm.convert'
 
+	java {
+		toolchain {
+			languageVersion = JavaLanguageVersion.of(17)
+		}
+	}
+
 	configurations {
 		compileOnly {
 			extendsFrom annotationProcessor
@@ -102,7 +108,6 @@ bootJar{
 jar{
 	enabled = true
 }
-
 
 
 

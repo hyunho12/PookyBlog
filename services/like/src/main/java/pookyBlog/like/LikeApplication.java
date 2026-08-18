@@ -11,9 +11,11 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(
         scanBasePackages = {"pookyBlog.like", "pookyBlog.common", "pookyBlog.user.Repository", "pookyBlog.post.Repository"}
 )
-@EntityScan(basePackages = {"pookyBlog.common.entity", "pookyBlog.like.entity","pookyBlog.common.outboxmessage"})
+@EntityScan(basePackages = {"pookyBlog.common.Entity", "pookyBlog.like.Entity", "pookyBlog.post.Entity", "pookyBlog.common.outboxmessage"})
 @EnableJpaRepositories(basePackages = {
         "pookyBlog.like.Repository",
+        "pookyBlog.post.Repository",
+        "pookyBlog.user.Repository",
         "pookyBlog.common.outboxmessage"
 })
 public class LikeApplication {

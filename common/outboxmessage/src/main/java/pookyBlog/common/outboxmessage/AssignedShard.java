@@ -21,9 +21,9 @@ public class AssignedShard { // MessageRelayCoordinator의 요청을 받아, 실
         }
 
         long start = appIndex * shardCount / appIds.size();
-        long end = (appIndex - 1) * shardCount / appIds.size() - 1;
+        long end = (appIndex + 1L) * shardCount / appIds.size();
 
-        return LongStream.rangeClosed(start, end).boxed().toList();
+        return LongStream.range(start, end).boxed().toList();
     }
 
     private static int findAppIndex(String appId, List<String> appIds){

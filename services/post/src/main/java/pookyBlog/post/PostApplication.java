@@ -14,7 +14,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication(
         scanBasePackages = {"pookyBlog.post", "pookyBlog.common"}
 )
-@EntityScan(basePackages = {"pookyBlog.common.entity", "pookyBlog.post.entity","pookyBlog.common.outboxmessage"})
+@EntityScan(basePackages = {"pookyBlog.common.Entity", "pookyBlog.post.Entity", "pookyBlog.common.outboxmessage"})
 @EnableJpaRepositories(basePackages = {
         "pookyBlog.post.Repository",
         "pookyBlog.common.outboxmessage" 

@@ -15,7 +15,7 @@ import pookyBlog.common.event.EventType;
 import pookyBlog.common.event.payload.PostLikedEventPayload;
 import pookyBlog.user.Repository.UserRepository;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class LikeService {
     private final Snowflake snowflake;
     private final OutboxEventPublisher outboxEventPublisher;
 
-    public Like saveLike(Long postId, Long userId) {
+    public Like saveLike(Long userId, Long postId) {
         if(likeRepository.existsByUserIdAndPostId(userId, postId)){
             throw new IllegalArgumentException("이미 좋아요를 누른 게시글입니다.");
         }
@@ -94,7 +94,7 @@ public class LikeService {
     public void likePostWithOptimisticLock(Long userId, Long postId){
         Like like = saveLike(userId, postId);
 
-        LikeCount likeCount = likeRepository.findByPostId(postId)
+        LikeCount likeCount = likeRepository.findLikeCountById(postId)
                 .orElseThrow(() -> new RuntimeException("LikeCount 없음"));
 
         likeCount.increaseLikeCount();
@@ -105,7 +105,7 @@ public class LikeService {
     @Transactional
     public void unlikePostWithOptimisticLock(Long userId, Long postId){
         Like unlike = deleteLike(userId, postId);
-        LikeCount likeCount = likeRepository.findByPostId(postId)
+        LikeCount likeCount = likeRepository.findLikeCountById(postId)
                 .orElseThrow(() -> new RuntimeException("LikeCount 없음"));
         likeCount.decreaseLikeCount();
         publishLikeEvent(EventType.POST_UNLIKED, unlike);
@@ -143,7 +143,7 @@ public class LikeService {
                         .postLikeId(like.getId())
                         .postId(like.getPost().getId())
                         .userId(like.getUser().getId())
-                        .createdAt(LocalDateTime.parse(like.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .createdAt(LocalDate.parse(like.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")).atStartOfDay())
                         .postLikeCount(likeRepository.countByPostId(like.getPost().getId()))
                         .build(),
                 0L

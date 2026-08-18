@@ -1,0 +1,3 @@
+jwt:
+  # Test-only Base64 key; never use this value outside tests.
+  secret: "dGVzdC1vbmx5LXNlY3JldC1rZXktdGhhdC1pcy1sb25nLWVub3VnaCE="

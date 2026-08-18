@@ -8,7 +8,7 @@ import pookyBlog.view.Service.PostViewService;
 @RestController
 @RequiredArgsConstructor
 public class PostViewController {
-    private PostViewService postViewService;
+    private final PostViewService postViewService;
 
     @PostMapping("/{postId}/users/{userId}")
     public Long increase(@PathVariable("postId") Long postId, @PathVariable("userId") Long userId){

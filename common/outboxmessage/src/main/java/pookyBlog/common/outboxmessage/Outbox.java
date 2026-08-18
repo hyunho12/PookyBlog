@@ -16,6 +16,7 @@ public class Outbox {
     private Long outboxId;
     @Enumerated(EnumType.STRING)
     private EventType eventType;
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String payload;
     private Long shardKey;
     private LocalDateTime createdAt;

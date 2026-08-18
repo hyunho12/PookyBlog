@@ -1,6 +1,7 @@
 package pookyBlog.user.Service;
 
 import pookyBlog.common.Entity.User;
+import pookyBlog.common.Entity.Role;
 import pookyBlog.common.Dto.Request.SignUpDto;
 import pookyBlog.user.Repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class UserService {
                 .password(passwordEncoder.encode(signUpDto.getPassword()))
                 .nickname(signUpDto.getNickname())
                 .email(signUpDto.getEmail())
-                .role(signUpDto.getRole())
+                .role(Role.USER)
                 .build();
 
         return userRepository.save(user);

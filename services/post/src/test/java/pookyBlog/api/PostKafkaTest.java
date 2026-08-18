@@ -1,48 +1,109 @@
 package pookyBlog.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.annotation.Commit;
-import org.springframework.web.client.RestClient;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
+import org.springframework.test.web.servlet.MockMvc;
 import pookyBlog.common.Dto.Request.PostCreate;
+import pookyBlog.common.event.EventType;
+import pookyBlog.common.event.payload.PostCreatedEventPayload;
+import pookyBlog.common.outboxmessage.Outbox;
+import pookyBlog.common.outboxmessage.OutboxEvent;
+import pookyBlog.common.outboxmessage.OutboxRepository;
+import pookyBlog.post.PostApplication;
+import pookyBlog.post.Repository.PostCountRepository;
+import pookyBlog.post.Repository.PostRepository;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import java.util.concurrent.CompletableFuture;
 
-public class PostKafkaTest {
-    private final RestClient restClient = RestClient.create("http://localhost:8083");
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest(classes = PostApplication.class)
+@AutoConfigureMockMvc(addFilters = false)
+@RecordApplicationEvents
+class PostKafkaTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private OutboxRepository outboxRepository;
+
+    @Autowired
+    private PostRepository postRepository;
+
+    @Autowired
+    private PostCountRepository postCountRepository;
+
+    @Autowired
+    private ApplicationEvents applicationEvents;
+
+    @MockitoBean
+    private KafkaTemplate<String, String> kafkaTemplate;
 
     @Test
-    @WithMockUser
-    @Commit
-    @DisplayName("게시글 생성 API를 호출하고, 애플리케이션 로그를 통해 전체 과정을 확인한다")
-    public void createTest_withRestClient() {
-        // given: API 요청에 필요한 DTO를 생성합니다.
-        PostCreate postCreate = PostCreate.builder()
-                .title("RestClient 테스트 제목")
-                .content("RestClient 테스트 내용")
-                .writer("rest_tester")
+    @DisplayName("Kafka 전송 실패 시 POST_CREATED 이벤트를 Outbox에 보존한다")
+    void createPost_persistsOutboxWhenKafkaPublishFails() throws Exception {
+        PostCreate request = PostCreate.builder()
+                .title("t")
+                .content("c")
+                .writer("w")
                 .build();
 
-        // when: RestClient를 사용하여 실제 실행 중인 애플리케이션에 POST 요청을 보냅니다.
-        ResponseEntity<Void> response = restClient.post()
-                .uri("/posts/create")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(postCreate)
-                .retrieve()
-                .toBodilessEntity(); // 응답 본문이 없다면 toBodilessEntity() 사용
+        when(kafkaTemplate.send(anyString(), anyString(), anyString()))
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("test broker unavailable")));
 
-        // then: 자동화된 검증이 아닌, 수동 확인을 위한 단계입니다.
-        // 1. HTTP 응답 상태 코드가 성공(2xx)인지 기본적인 확인을 합니다.
-        assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        System.out.println(">>> API 요청 성공! 응답 코드: " + response.getStatusCode());
+        Outbox outbox = null;
+        Long postId = null;
+        try {
+            mockMvc.perform(post("/posts/create")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(request)))
+                    .andExpect(status().isOk());
 
-        // 2. 개발자가 직접 '실행 중인 애플리케이션의 콘솔 로그'를 확인해야 합니다.
-        System.out.println(">>> 이제 실행 중인 'post-service'의 콘솔 창을 확인하여 아래 로그들이 순서대로 찍히는지 확인하세요.");
-        System.out.println("    1. [MessageRelay.createOutbox] 로그");
-        System.out.println("    2. [MessageRelay.publishEvent] Success 로그");
-        System.out.println(">>> 마지막으로 DB에 접속하여 'outbox' 테이블이 비어있는지 확인하면 완벽합니다.");
+            Long outboxId = applicationEvents.stream(OutboxEvent.class)
+                    .map(OutboxEvent::getOutbox)
+                    .filter(candidate -> candidate.getEventType() == EventType.POST_CREATED)
+                    .map(Outbox::getOutboxId)
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError("POST_CREATED outbox event was not published"));
+            outbox = outboxRepository.findById(outboxId)
+                    .orElseThrow(() -> new AssertionError("POST_CREATED outbox was not persisted"));
+
+            var eventJson = objectMapper.readTree(outbox.getPayload());
+            PostCreatedEventPayload payload = objectMapper.treeToValue(
+                    eventJson.get("payload"), PostCreatedEventPayload.class
+            );
+            postId = payload.getPostId();
+
+            assertThat(outbox.getEventType()).isEqualTo(EventType.POST_CREATED);
+            assertThat(payload.getTitle()).isEqualTo(request.getTitle());
+            assertThat(payload.getContent()).isEqualTo(request.getContent());
+            assertThat(payload.getWriter()).isEqualTo(request.getWriter());
+            assertThat(postRepository.findById(postId)).isPresent();
+        } finally {
+            if (outbox != null) {
+                outboxRepository.deleteById(outbox.getOutboxId());
+            }
+            if (postId != null) {
+                postCountRepository.deleteById(postId);
+                postRepository.deleteById(postId);
+            }
+        }
     }
 }

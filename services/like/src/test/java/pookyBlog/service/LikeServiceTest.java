@@ -62,12 +62,13 @@ class LikeServiceTest {
     @DisplayName("좋아요 누르고 확인하고 취소하는 기능검증")
     @Transactional
     void like_unlikeTest() throws Exception {
+        String uniqueId = UUID.randomUUID().toString().substring(0, 12);
         User user = User.builder()
                 .id(snowflake.nextId())
-                .username("khh")
+                .username("like-test-" + uniqueId)
                 .password("asdf")
                 .email(UUID.randomUUID() + "test@naver.com")
-                .nickname("khh12")
+                .nickname("like-nick-" + uniqueId)
                 .role(Role.USER)
                 .build();
         userId = userRepository.save(user).getId();
