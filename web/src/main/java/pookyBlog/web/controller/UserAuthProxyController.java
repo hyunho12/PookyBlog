@@ -37,8 +37,26 @@ public class UserAuthProxyController {
 
     @PostMapping("/login")
     public Mono<ResponseEntity<Map>> login(@RequestBody LoginDto loginDto) {
-        return userWebClient.post().uri("/auth/login").bodyValue(loginDto)
-                .exchangeToMono(upstream -> upstream.toEntity(Map.class));
+        return userWebClient.post()
+                .uri("/auth/login")
+                .bodyValue(loginDto)
+                .exchangeToMono(upstream ->
+                        upstream.bodyToMono(Map.class)
+                                .map(body -> {
+                                    ResponseEntity.BodyBuilder builder =
+                                            ResponseEntity.status(upstream.statusCode());
+
+                                    String setCookie = upstream.headers()
+                                            .asHttpHeaders()
+                                            .getFirst(HttpHeaders.SET_COOKIE);
+
+                                    if (setCookie != null) {
+                                        builder.header(HttpHeaders.SET_COOKIE, setCookie);
+                                    }
+
+                                    return builder.body(body);
+                                })
+                );
     }
 
     @GetMapping("/me")
