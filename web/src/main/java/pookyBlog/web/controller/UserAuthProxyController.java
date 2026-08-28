@@ -27,8 +27,12 @@ public class UserAuthProxyController {
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<Map>> signUp(@RequestBody SignUpDto signUpDto) {
-        return userWebClient.post().uri("/auth/signup").bodyValue(signUpDto)
-                .retrieve().toEntity(Map.class);
+        return userWebClient.post()
+                .uri("/auth/signup")
+                .bodyValue(signUpDto)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/login")
