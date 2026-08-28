@@ -21,7 +21,8 @@ public class CommentProxyController {
         return commentWebClient.get()
                 .uri("/api/posts/{postId}", postId)
                 .retrieve()
-                .toEntityList(pookyBlog.common.Dto.Response.CommentResponse.class);
+                .toEntityList(pookyBlog.common.Dto.Response.CommentResponse.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody()));
     }
 
     @PostMapping("/posts/{postId}/comments")
@@ -35,7 +36,8 @@ public class CommentProxyController {
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .bodyValue(request)
                 .retrieve()
-                .toEntity(Long.class);
+                .toEntity(Long.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody()));
         });
     }
 
@@ -48,7 +50,8 @@ public class CommentProxyController {
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .bodyValue(request)
                 .retrieve()
-                .toBodilessEntity());
+                .toBodilessEntity()
+                .map(response -> ResponseEntity.status(response.getStatusCode()).build()));
     }
 
     @DeleteMapping("/comments/{commentId}")
@@ -59,6 +62,7 @@ public class CommentProxyController {
                         .queryParam("userId", user.id()).build(commentId))
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .retrieve()
-                .toBodilessEntity());
+                .toBodilessEntity()
+                .map(response -> ResponseEntity.status(response.getStatusCode()).build()));
     }
 }

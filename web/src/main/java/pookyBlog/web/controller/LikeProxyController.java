@@ -25,7 +25,8 @@ public class LikeProxyController {
                         .build(postId))
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .retrieve()
-                .toEntity(String.class));
+                .toEntity(String.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody())));
     }
 
     @DeleteMapping
@@ -37,7 +38,8 @@ public class LikeProxyController {
                         .build(postId))
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .retrieve()
-                .toEntity(String.class));
+                .toEntity(String.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody())));
     }
 
     @GetMapping("/count")
@@ -45,6 +47,7 @@ public class LikeProxyController {
         return likeWebClient.get()
                 .uri("/likes/count/{postId}", postId)
                 .retrieve()
-                .toEntity(Long.class);
+                .toEntity(Long.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody()));
     }
 }

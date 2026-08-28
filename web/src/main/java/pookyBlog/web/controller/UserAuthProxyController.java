@@ -40,21 +40,23 @@ public class UserAuthProxyController {
         return userWebClient.post()
                 .uri("/auth/login")
                 .bodyValue(loginDto)
-                .exchangeToMono(upstream ->
-                        upstream.bodyToMono(Map.class)
-                                .map(body -> {
-                                    ResponseEntity.BodyBuilder builder =
-                                            ResponseEntity.status(upstream.statusCode());
+                .exchangeToMono(upstream -> {
+                    if (upstream.statusCode().isError()) {
+                        return upstream.createException().flatMap(Mono::error);
+                    }
+                    return upstream.bodyToMono(Map.class)
+                            .defaultIfEmpty(Map.of())
+                            .map(body -> {
+                                ResponseEntity.BodyBuilder builder =
+                                        ResponseEntity.status(upstream.statusCode());
 
-                                    upstream.headers()
-                                            .header(HttpHeaders.SET_COOKIE)
-                                            .forEach(cookie ->
-                                                    builder.header(HttpHeaders.SET_COOKIE, cookie)
-                                            );
+                                upstream.headers()
+                                        .header(HttpHeaders.SET_COOKIE)
+                                        .forEach(cookie -> builder.header(HttpHeaders.SET_COOKIE, cookie));
 
-                                    return builder.body(body);
-                                })
-                );
+                                return builder.body(body);
+                            });
+                });
     }
 
     @GetMapping("/me")

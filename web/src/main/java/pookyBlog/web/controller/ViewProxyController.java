@@ -25,7 +25,8 @@ public class ViewProxyController {
         return authenticatedUserClient.currentUser(jwtToken).flatMap(user -> viewWebClient.post()
                 .uri("/post-view/{postId}/users/{userId}", postId, user.id())
                 .headers(headers -> headers.setBearerAuth(jwtToken))
-                .retrieve().toEntity(Long.class));
+                .retrieve().toEntity(Long.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody())));
     }
 
     @GetMapping("/count")
@@ -33,6 +34,7 @@ public class ViewProxyController {
         return viewWebClient.get()
                 .uri("/post-view/{postId}/count", postId)
                 .retrieve()
-                .toEntity(Long.class);
+                .toEntity(Long.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody()));
     }
 }

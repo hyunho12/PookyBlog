@@ -64,7 +64,8 @@ public class PostProxyController {
         return postWebClient.get()
                 .uri("/posts/{postId}", postId)
                 .retrieve()
-                .toEntity(PostResponse.class);
+                .toEntity(PostResponse.class)
+                .map(response -> ResponseEntity.status(response.getStatusCode()).body(response.getBody()));
     }
 
     @PostMapping
@@ -76,7 +77,8 @@ public class PostProxyController {
             return postWebClient.post().uri("/posts/create")
                     .headers(headers -> headers.setBearerAuth(jwtToken))
                     .bodyValue(request)
-                    .retrieve().toBodilessEntity();
+                    .retrieve().toBodilessEntity()
+                    .map(response -> ResponseEntity.status(response.getStatusCode()).build());
         });
     }
 
@@ -89,7 +91,8 @@ public class PostProxyController {
                 .uri("/posts/update/{postId}", postId)
                 .headers(headers -> headers.setBearerAuth(jwtToken))
                 .bodyValue(request)
-                .retrieve().toBodilessEntity()));
+                .retrieve().toBodilessEntity()
+                .map(response -> ResponseEntity.status(response.getStatusCode()).build())));
     }
 
     @DeleteMapping("/{postId}")
@@ -99,7 +102,8 @@ public class PostProxyController {
         return requirePostOwner(postId, jwtToken).then(Mono.defer(() -> postWebClient.delete()
                 .uri("/posts/delete/{postId}", postId)
                 .headers(headers -> headers.setBearerAuth(jwtToken))
-                .retrieve().toBodilessEntity()));
+                .retrieve().toBodilessEntity()
+                .map(response -> ResponseEntity.status(response.getStatusCode()).build())));
     }
 
     private Mono<Void> requirePostOwner(Long postId, String jwtToken) {

@@ -108,4 +108,27 @@ class PostProxyControllerTest {
         assertThat(requests).anyMatch(request -> request.method() == org.springframework.http.HttpMethod.DELETE
                 && request.url().getPath().equals("/posts/delete/1"));
     }
+
+    @Test
+    void getPostKeepsStatusAndBodyWithoutDownstreamHeaders() {
+        WebClient postWebClient = WebClient.builder().exchangeFunction(request -> Mono.just(
+                ClientResponse.create(HttpStatus.ACCEPTED)
+                        .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                        .header(HttpHeaders.TRANSFER_ENCODING, "chunked")
+                        .header(HttpHeaders.CONNECTION, "keep-alive")
+                        .body("{\"id\":1,\"title\":\"title\",\"content\":\"content\"," +
+                                "\"writer\":\"writer\",\"createdDate\":\"2026.08.29\"," +
+                                "\"view\":0,\"comments\":[]}")
+                        .build())).build();
+        PostProxyController controller = new PostProxyController(
+                postWebClient, postWebClient, mock(AuthenticatedUserClient.class));
+
+        var response = controller.getPost(1L).block();
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getTitle()).isEqualTo("title");
+        assertThat(response.getHeaders()).doesNotContainKeys(
+                HttpHeaders.TRANSFER_ENCODING, HttpHeaders.CONTENT_LENGTH, HttpHeaders.CONNECTION);
+    }
 }
