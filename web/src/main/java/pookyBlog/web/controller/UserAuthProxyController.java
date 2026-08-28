@@ -59,12 +59,24 @@ public class UserAuthProxyController {
 
     @GetMapping("/me")
     public Mono<ResponseEntity<AuthMeResponse>> me() {
-        return userWebClient.get().uri("/auth/me").retrieve().toEntity(AuthMeResponse.class);
+        return userWebClient.get()
+                .uri("/auth/me")
+                .retrieve()
+                .bodyToMono(AuthMeResponse.class)
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<Map>> logout(HttpServletResponse response) {
-        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookieFactory.expire().toString());
-        return userWebClient.post().uri("/auth/logout").retrieve().toEntity(Map.class);
+        response.addHeader(
+                HttpHeaders.SET_COOKIE,
+                jwtCookieFactory.expire().toString()
+        );
+
+        return userWebClient.post()
+                .uri("/auth/logout")
+                .retrieve()
+                .bodyToMono(Map.class)
+                .map(ResponseEntity::ok);
     }
 }
