@@ -4,12 +4,13 @@ import pookyBlog.common.Dto.Request.SignUpDto;
 import pookyBlog.user.Security.auth.UserTokenProvider;
 import pookyBlog.user.Service.UserService;
 import pookyBlog.common.Dto.Request.LoginDto;
+import pookyBlog.common.Dto.Response.AuthMeResponse;
+import pookyBlog.common.jwt.JwtCookieFactory;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,6 +28,7 @@ public class UserApiController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final UserTokenProvider userTokenProvider;
+    private final JwtCookieFactory jwtCookieFactory;
 
     // 회원가입
     @PostMapping("/signup")
@@ -49,19 +51,10 @@ public class UserApiController {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             String accessToken = userTokenProvider.generateToken(authentication).getAccessToken();
-            String refreshToekn = userTokenProvider.generateToken(authentication).getRefreshToken();
-
             log.info("✅ 로그인 성공: {}", authentication.getName());
             log.info("✅ SecurityContext에 저장된 사용자: {}", SecurityContextHolder.getContext().getAuthentication().getName());
 
-            ResponseCookie jwtCookie = ResponseCookie.from("jwtToken",accessToken)
-                    .httpOnly(true)
-                    .secure(true)
-                    .sameSite("Strict")
-                    .path("/")
-                    .maxAge(60*60) // 1시간
-                    .build();
-            response.addHeader("Set-Cookie", jwtCookie.toString());
+            response.addHeader("Set-Cookie", jwtCookieFactory.create(accessToken).toString());
 
             //return ResponseEntity.ok("로그인 성공!");
             return ResponseEntity.ok().body(Collections.singletonMap("message","로그인 성공!"));
@@ -72,18 +65,17 @@ public class UserApiController {
         }
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<AuthMeResponse> me(Authentication authentication) {
+        var user = userService.findByUsername(authentication.getName());
+        return ResponseEntity.ok(new AuthMeResponse(user.getId(), user.getUsername(), user.getNickname()));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletResponse response){
         SecurityContextHolder.clearContext();
 
-        ResponseCookie jwtCookie = ResponseCookie.from("jwtToken","")
-                .httpOnly(true)
-                .secure(true)
-                .sameSite("Strict")
-                .path("/")
-                .maxAge(0)
-                .build();
-        response.addHeader("Set-Cookie", jwtCookie.toString());
+        response.addHeader("Set-Cookie", jwtCookieFactory.expire().toString());
         log.info("✅ 로그아웃 완료: JWT 삭제 및 SecurityContext 초기화");
         return ResponseEntity.ok(Collections.singletonMap("message", "로그아웃 성공"));
     }

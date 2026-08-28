@@ -1,0 +1,3 @@
+auth:
+  cookie:
+    secure: true

@@ -14,12 +14,3 @@ dependencies {
 bootJar{
     enabled = true
 }
-
-//springBoot{
-//    mainClass = 'pookyBlog.HotPostApplication'
-//}
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.HotPostApplication")
-    }
-}

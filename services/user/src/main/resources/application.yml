@@ -29,3 +29,8 @@ logging:
 jwt:
   secret: "AmKMSyFs3PLnjnUJ+eVEQhushSxVP304msrFm4rj6PA="
   expiration: 86400000 #1일
+auth:
+  cookie:
+    secure: false
+    same-site: Strict
+    max-age: 3600

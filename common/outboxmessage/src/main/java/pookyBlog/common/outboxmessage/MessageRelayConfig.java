@@ -7,11 +7,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -24,7 +24,6 @@ import java.util.concurrent.ScheduledExecutorService;
 @EnableAsync
 @ComponentScan("pookyBlog.common.outboxmessage")
 @Configuration
-@EnableScheduling
 public class MessageRelayConfig { // KafkaTemplate Bean 정의
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -40,6 +39,7 @@ public class MessageRelayConfig { // KafkaTemplate Bean 정의
     }
 
     @Bean
+    @ConditionalOnProperty(name = "outbox.relay.enabled", havingValue = "true", matchIfMissing = true)
     public TaskScheduler messageRelayPublishEventExecutor(){
         ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
         scheduler.setPoolSize(20);
@@ -49,6 +49,7 @@ public class MessageRelayConfig { // KafkaTemplate Bean 정의
     }
 
     @Bean
+    @ConditionalOnProperty(name = "outbox.relay.enabled", havingValue = "true", matchIfMissing = true)
     public ScheduledExecutorService messageRelayPublishPendingEventExecutor(){
         return Executors.newSingleThreadScheduledExecutor();
     }

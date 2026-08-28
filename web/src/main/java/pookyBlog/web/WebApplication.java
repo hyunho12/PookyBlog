@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
+import org.springframework.context.annotation.Import;
+import pookyBlog.common.jwt.JwtCookieFactory;
 
 @SpringBootApplication(
         exclude = {
@@ -12,7 +14,9 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
                 JpaRepositoriesAutoConfiguration.class,
                 HibernateJpaAutoConfiguration.class
         }
-)public class WebApplication {
+)
+@Import(JwtCookieFactory.class)
+public class WebApplication {
     public static void main(String[] args) {
         SpringApplication.run(WebApplication.class, args);
     }

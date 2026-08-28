@@ -20,8 +20,3 @@ bootJar{
 jar{
     enabled = false
 }
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.WebApplication")
-    }
-}

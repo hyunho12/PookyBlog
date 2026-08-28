@@ -1,0 +1,182 @@
+name: pookyblog
+
+x-app-environment: &app-environment
+  SPRING_PROFILES_ACTIVE: docker
+  MYSQL_DATABASE: ${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env}
+  MYSQL_USER: ${MYSQL_USER:?Set MYSQL_USER in .env}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+  TZ: Asia/Seoul
+
+x-app-depends-on: &app-depends-on
+  mysql:
+    condition: service_healthy
+  redis:
+    condition: service_healthy
+  kafka:
+    condition: service_healthy
+
+x-app: &app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  environment: *app-environment
+  depends_on: *app-depends-on
+  networks: [backend]
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?Set MYSQL_DATABASE in .env}
+      MYSQL_USER: ${MYSQL_USER:?Set MYSQL_USER in .env}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+09:00
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    networks: [backend]
+
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  kafka:
+    image: apache/kafka:3.8.1
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+    networks: [backend]
+
+  user-service:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SNOWFLAKE_WORKER_ID: ${USER_SNOWFLAKE_WORKER_ID:-1}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:user", MODULE_DIR: "services/user"}
+
+  post-service:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SNOWFLAKE_WORKER_ID: ${POST_SNOWFLAKE_WORKER_ID:-2}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:post", MODULE_DIR: "services/post"}
+
+  comment-service:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SNOWFLAKE_WORKER_ID: ${COMMENT_SNOWFLAKE_WORKER_ID:-3}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:comment", MODULE_DIR: "services/comment"}
+
+  like-service:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SNOWFLAKE_WORKER_ID: ${LIKE_SNOWFLAKE_WORKER_ID:-4}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:like", MODULE_DIR: "services/like"}
+
+  view-service:
+    <<: *app
+    environment:
+      <<: *app-environment
+      SNOWFLAKE_WORKER_ID: ${VIEW_SNOWFLAKE_WORKER_ID:-5}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:view", MODULE_DIR: "services/view"}
+
+  post-read-service:
+    <<: *app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:post-read", MODULE_DIR: "services/post-read"}
+
+  hot-post-service:
+    <<: *app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":services:hot-post", MODULE_DIR: "services/hot-post"}
+
+  web:
+    <<: *app
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: {GRADLE_TASK: ":web", MODULE_DIR: "web"}
+    depends_on:
+      user-service: {condition: service_started}
+      post-service: {condition: service_started}
+      comment-service: {condition: service_started}
+      like-service: {condition: service_started}
+      view-service: {condition: service_started}
+      post-read-service: {condition: service_started}
+      hot-post-service: {condition: service_started}
+    ports:
+      - "${WEB_PORT:-8080}:8087"
+
+networks:
+  backend:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  kafka-data:

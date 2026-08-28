@@ -2,8 +2,9 @@ package pookyBlog.web.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseCookie;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
 import pookyBlog.common.Dto.Request.LoginDto;
 import pookyBlog.common.Dto.Request.SignUpDto;
+import pookyBlog.common.Dto.Response.AuthMeResponse;
+import pookyBlog.common.jwt.JwtCookieFactory;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
@@ -20,50 +23,28 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserAuthProxyController {
     private final WebClient userWebClient;
+    private final JwtCookieFactory jwtCookieFactory;
 
     @PostMapping("/signup")
     public Mono<ResponseEntity<Map>> signUp(@RequestBody SignUpDto signUpDto) {
-        return userWebClient.post()
-                .uri("/api/auth/signup")
-                .bodyValue(signUpDto)
-                .retrieve()
-                .toEntity(Map.class);
+        return userWebClient.post().uri("/auth/signup").bodyValue(signUpDto)
+                .retrieve().toEntity(Map.class);
     }
 
     @PostMapping("/login")
-    public Mono<ResponseEntity<Map>> login(@RequestBody LoginDto loginDto, HttpServletResponse response) {
-        return userWebClient.post()
-                .uri("/api/auth/login")
-                .bodyValue(loginDto)
-                .retrieve()
-                .toEntity(Map.class) // user-service가 { "accessToken": "...", "refreshToken": "..." } 등을 반환한다고 가정
-                .doOnSuccess(entity -> {
-                    if (entity.getBody() != null && entity.getBody().containsKey("accessToken")) {
-                        String accessToken = (String) entity.getBody().get("accessToken");
-                        ResponseCookie jwtCookie = ResponseCookie.from("jwtToken", accessToken)
-                                .httpOnly(true)
-                                .secure(true) // HTTPS 환경에서만
-                                .sameSite("Strict")
-                                .path("/")
-                                .maxAge(3600) // 1시간
-                                .build();
-                        response.addHeader("Set-Cookie", jwtCookie.toString());
-                    }
-                });
+    public Mono<ResponseEntity<Map>> login(@RequestBody LoginDto loginDto) {
+        return userWebClient.post().uri("/auth/login").bodyValue(loginDto)
+                .exchangeToMono(upstream -> upstream.toEntity(Map.class));
+    }
+
+    @GetMapping("/me")
+    public Mono<ResponseEntity<AuthMeResponse>> me() {
+        return userWebClient.get().uri("/auth/me").retrieve().toEntity(AuthMeResponse.class);
     }
 
     @PostMapping("/logout")
     public Mono<ResponseEntity<Map>> logout(HttpServletResponse response) {
-        ResponseCookie jwtCookie = ResponseCookie.from("jwtToken", "")
-                .path("/")
-                .maxAge(0)
-                .build();
-        response.addHeader("Set-Cookie", jwtCookie.toString());
-
-        // 내부 user-service의 로그아웃 로직도 호출 (필요 시)
-        return userWebClient.post()
-                .uri("/api/auth/logout")
-                .retrieve()
-                .toEntity(Map.class);
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookieFactory.expire().toString());
+        return userWebClient.post().uri("/auth/logout").retrieve().toEntity(Map.class);
     }
 }

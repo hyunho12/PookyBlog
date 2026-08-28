@@ -7,6 +7,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,40 +18,40 @@ import java.io.IOException;
 
 @Configuration
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends GenericFilterBean {
     private final JwtTokenProvider jwtTokenProvider;
 
     @Override
-    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
-        HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-        System.out.println("🔹 JwtAuthenticationFilter 실행됨 - 요청 URL: " + httpRequest.getRequestURI());
-        //String token = resolveToken(httpRequest);
-        String token = extractJwtFromCookie(httpRequest);
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain)
+            throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        String token = resolveToken(request);
 
-        if (token != null && jwtTokenProvider.validateToken(token)) {
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            System.out.println("✅ User Authenticated : " + authentication.getName());
-        } else {
-            System.out.println("⚠ Token is invalid or missing");
+        try {
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
+        } catch (RuntimeException exception) {
+            SecurityContextHolder.clearContext();
+            log.debug("JWT authentication failed for {}", request.getRequestURI(), exception);
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }
 
-    // Request Header에서 토큰정보 추출
-    private String resolveToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        System.out.println("Authorization header: " + bearerToken);
-
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+    String resolveToken(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        if (StringUtils.hasText(authorization)) {
+            if (authorization.startsWith("Bearer ")) {
+                String token = authorization.substring(7).trim();
+                return StringUtils.hasText(token) ? token : null;
+            }
+            return null;
         }
-        return null;
+        return extractJwtFromCookie(request);
     }
 
-    // 쿠키에서 JWT 추출하는 메서드 추가
     private String extractJwtFromCookie(HttpServletRequest request) {
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {

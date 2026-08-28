@@ -7,6 +7,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WebClientConfig {
+    private final JwtRelayExchangeFilter jwtRelayExchangeFilter;
+
+    public WebClientConfig(JwtRelayExchangeFilter jwtRelayExchangeFilter) {
+        this.jwtRelayExchangeFilter = jwtRelayExchangeFilter;
+    }
+
+    private WebClient client(String baseUrl) {
+        return WebClient.builder().baseUrl(baseUrl).filter(jwtRelayExchangeFilter.filter()).build();
+    }
     @Value("${service.url.comment}")
     private String commentServiceUrl;
 
@@ -30,36 +39,36 @@ public class WebClientConfig {
 
     @Bean
     public WebClient commentWebClient(){
-        return WebClient.builder().baseUrl(commentServiceUrl).build();
+        return client(commentServiceUrl);
     }
 
     @Bean
     public WebClient hotPostWebClient(){
-        return WebClient.builder().baseUrl(hotPostServiceUrl).build();
+        return client(hotPostServiceUrl);
     }
 
     @Bean
     public WebClient likeWebClient(){
-        return WebClient.builder().baseUrl(likeServiceUrl).build();
+        return client(likeServiceUrl);
     }
 
     @Bean
     public WebClient postWebClient(){
-        return WebClient.builder().baseUrl(postServiceUrl).build();
+        return client(postServiceUrl);
     }
 
     @Bean
     public WebClient postReadWebClient(){
-        return WebClient.builder().baseUrl(postReadServiceUrl).build();
+        return client(postReadServiceUrl);
     }
 
     @Bean
     public WebClient userWebClient(){
-        return WebClient.builder().baseUrl(userServiceUrl).build();
+        return client(userServiceUrl);
     }
 
     @Bean
     public WebClient viewWebClient(){
-        return WebClient.builder().baseUrl(viewServiceUrl).build();
+        return client(viewServiceUrl);
     }
 }

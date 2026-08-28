@@ -4,6 +4,10 @@ server:
     encoding:
       force-response: true
 
+outbox:
+  relay:
+    enabled: true
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

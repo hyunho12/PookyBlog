@@ -1,0 +1,18 @@
+spring:
+  data:
+    redis:
+      host: redis
+      port: 6379
+  kafka:
+    bootstrap-servers: kafka:9092
+  endpoints:
+    pooky-board-post-service:
+      url: http://post-service:8083
+    pooky-board-comment-service:
+      url: http://comment-service:8080
+    pooky-board-like-service:
+      url: http://like-service:8082
+    pooky-board-view-service:
+      url: http://view-service:8085
+jwt:
+  secret: ${JWT_SECRET}

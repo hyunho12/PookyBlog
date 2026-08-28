@@ -1,32 +1,22 @@
 {{>layout/header}}
-<div id="posts_list">
-    <table id="table" class="table table-horizontal">
-        <thead id="thead">
-        <tr>
-            <th>번호</th>
-            <th class="col-md-6 text-center">제목</th>
-            <th>작성자</th>
-            <th>작성일</th>
-            <th>조회수</th>
-
-        </tr>
-        </thead>
-        <tbody id="tbody">
-        {{#posts}}
-            <tr>
-                <td>{{id}}</td>
-                <td><a href="/posts/getPost/{{id}}">{{title}}</a></td>
-                <td>{{writer}}</td>
-                <td>{{createdDate}}</td>
-                <td>{{view}}</td>
-            </tr>
-        {{/posts}}
-        </tbody>
-    </table>
-    <div class="text-right">
-        <a href="/posts/write" role="button" class="btn btn-primary bi bi-pencil-fill"> 글쓰기</a>
+<div class="page-shell">
+    <div class="page-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3">
+        <div><h1>게시글</h1><p>개발 경험과 생각을 자유롭게 나눠보세요.</p></div>
+        {{#user}}<a href="/posts/write" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>새 글 작성</a>{{/user}}
     </div>
-    {{! Page }}
+    <section class="surface-card overflow-hidden" aria-label="게시글 목록">
+        <div class="table-responsive">
+            <table class="table post-table" id="table">
+                <thead><tr><th scope="col">번호</th><th scope="col">제목</th><th scope="col">작성자</th><th scope="col">작성일</th><th scope="col">조회수</th></tr></thead>
+                <tbody>
+                {{#posts}}
+                    <tr><td>{{id}}</td><td class="post-title-cell"><a class="post-title-link" href="/posts/getPost/{{id}}">{{title}}</a></td><td><i class="bi bi-person me-1"></i>{{writer}}</td><td>{{createdDate}}</td><td><i class="bi bi-eye me-1"></i>{{viewCount}}</td></tr>
+                {{/posts}}
+                </tbody>
+            </table>
+        </div>
+        {{^posts}}<div class="empty-state"><i class="bi bi-journal-text" aria-hidden="true"></i><h2 class="h5 text-dark">아직 작성된 게시글이 없습니다.</h2><p class="mb-0">첫 번째 이야기를 작성해 보세요.</p></div>{{/posts}}
+    </section>
     {{>posts/posts-page}}
 </div>
 {{>layout/footer}}

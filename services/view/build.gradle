@@ -8,6 +8,7 @@ dependencies {
     implementation project(':common:snowflake')
     implementation project(':common:outboxmessage')
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'mysql:mysql-connector-java:8.0.33'
 }
 bootJar{
@@ -15,10 +16,4 @@ bootJar{
 }
 jar{
     enabled = false
-}
-
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.ViewApplication")
-    }
 }

@@ -1,11 +1,10 @@
 package pookyBlog.common.Dto.Response;
 
-import pookyBlog.common.Entity.Comment;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import pookyBlog.common.Entity.Post;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 public class PostResponse {
@@ -15,8 +14,7 @@ public class PostResponse {
     private final String content;
     private final String writer;
     private final String createdDate;
-    private final Integer view;
-    private final List<Comment> comments;
+    private final String modifiedDate;
 
     public PostResponse(Post post){
         this.id = post.getId();
@@ -24,18 +22,23 @@ public class PostResponse {
         this.content = post.getContent();
         this.writer = post.getWriter();
         this.createdDate = post.getCreatedDate();
-        this.view = post.getView();
-        this.comments = post.getComments();
+        this.modifiedDate = post.getModifiedDate();
     }
 
     @Builder
-    public PostResponse(Long id, String title, String content, String writer, String createdDate, Integer view, List<Comment> comments) {
+    @JsonCreator
+    public PostResponse(
+            @JsonProperty("id") Long id,
+            @JsonProperty("title") String title,
+            @JsonProperty("content") String content,
+            @JsonProperty("writer") String writer,
+            @JsonProperty("createdDate") String createdDate,
+            @JsonProperty("modifiedDate") String modifiedDate) {
         this.id = id;
         this.title = title;
         this.content = content;
         this.writer = writer;
         this.createdDate = createdDate;
-        this.view = view;
-        this.comments = comments;
+        this.modifiedDate = modifiedDate;
     }
 }

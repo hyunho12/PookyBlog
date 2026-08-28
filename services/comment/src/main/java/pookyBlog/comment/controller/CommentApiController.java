@@ -1,8 +1,9 @@
 package pookyBlog.comment.controller;
 
 import pookyBlog.common.Dto.Request.CommentCreate;
+import jakarta.validation.Valid;
 import pookyBlog.common.Dto.Request.CommentUpdate;
-import pookyBlog.common.Entity.Comment;
+import pookyBlog.common.Dto.Response.CommentResponse;
 import pookyBlog.comment.Service.CommentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,20 +25,21 @@ public class CommentApiController {
         return ResponseEntity.ok(commentId);
     }
 
-    @GetMapping("/posts/{id}")
-    public ResponseEntity<List<Comment>> getCommentsByPost(@PathVariable Long postId){
+    @GetMapping("/posts/{postId}")
+    public ResponseEntity<List<CommentResponse>> getCommentsByPost(@PathVariable("postId") Long postId){
         return ResponseEntity.ok(commentService.getComment(postId));
     }
 
     @PutMapping("/comments/{commentId}")
-    public ResponseEntity<Void> updateComment(@PathVariable Long commentId, @RequestBody CommentUpdate commentUpdate){
-        commentService.update(commentId, commentUpdate);
+    public ResponseEntity<Void> updateComment(@PathVariable Long commentId, @RequestParam Long userId,
+                                              @Valid @RequestBody CommentUpdate commentUpdate){
+        commentService.update(commentId, userId, commentUpdate);
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/comments/{commentId}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId) {
-        commentService.delete(commentId);
+    public ResponseEntity<Void> deleteComment(@PathVariable Long commentId, @RequestParam Long userId) {
+        commentService.delete(commentId, userId);
         return ResponseEntity.ok().build();
     }
 

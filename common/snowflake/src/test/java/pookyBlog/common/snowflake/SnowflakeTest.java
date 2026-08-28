@@ -16,6 +16,25 @@ class SnowflakeTest {
 	Snowflake snowflake = new Snowflake();
 
 	@Test
+	void supportsExplicitWorkerIdWithoutRandomGeneratorProvider() {
+		Snowflake firstWorker = new Snowflake(1L);
+		Snowflake secondWorker = new Snowflake(2L);
+
+		long firstId = firstWorker.nextId();
+		long secondId = secondWorker.nextId();
+
+		assertThat((firstId >> 12) & 0x3ff).isEqualTo(1L);
+		assertThat((secondId >> 12) & 0x3ff).isEqualTo(2L);
+		assertThat(firstId).isNotEqualTo(secondId);
+	}
+
+	@Test
+	void rejectsWorkerIdOutsideTenBitRange() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new Snowflake(-1L));
+		assertThatIllegalArgumentException().isThrownBy(() -> new Snowflake(1024L));
+	}
+
+	@Test
 	void nextIdTest() throws ExecutionException, InterruptedException {
 		// given
 		ExecutorService executorService = Executors.newFixedThreadPool(10);

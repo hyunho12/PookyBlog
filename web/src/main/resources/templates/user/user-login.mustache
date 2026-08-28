@@ -1,23 +1,14 @@
 {{>layout/header}}
-<div id="posts_list">
-    <div class="container col-md-4">
-        <form id="login-form">
-            <div class="form-group">
-                <label>아이디</label>
-                <input type="text" id="username" class="form-control" placeholder="아이디를 입력해주세요"/>
-                <span id="valid_username" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <label>비밀번호</label>
-                <input type="password" id="password" class="form-control" placeholder="비밀번호를 입력해주세요"/>
-                <span id="valid_password" class="text-danger"></span>
-            </div>
-
-            <span id="error-message" class="text-danger"></span>
-
-            <button type="button" id="btn-login" class="btn btn-primary">로그인</button>
+<div class="auth-shell">
+    <section class="surface-card auth-card" aria-labelledby="login-title">
+        <div class="auth-brand"><i class="bi bi-person-circle" aria-hidden="true"></i><h1 id="login-title" class="h3 fw-bold mt-2">로그인</h1><p class="text-secondary mb-0">PookyBlog에 다시 오신 것을 환영합니다.</p></div>
+        <div id="error-message" class="alert alert-danger d-none" role="alert"></div>
+        <form id="login-form" class="needs-validation" novalidate>
+            <div class="mb-3"><label for="username" class="form-label fw-semibold">아이디</label><input type="text" id="username" class="form-control" placeholder="아이디를 입력하세요" autocomplete="username" required><div class="invalid-feedback">아이디를 입력해 주세요.</div></div>
+            <div class="mb-4"><label for="password" class="form-label fw-semibold">비밀번호</label><input type="password" id="password" class="form-control" placeholder="비밀번호를 입력하세요" autocomplete="current-password" required><div class="invalid-feedback">비밀번호를 입력해 주세요.</div></div>
+            <button type="button" id="btn-login" class="btn btn-primary w-100" data-loading-text="로그인 중...">로그인</button>
         </form>
-    </div>
+        <p class="text-center text-secondary mt-4 mb-0">아직 계정이 없으신가요? <a href="/auth/signup" class="fw-semibold">회원가입</a></p>
+    </section>
 </div>
 {{>layout/footer}}

@@ -4,6 +4,7 @@ import pookyBlog.common.Dto.Request.PostCreate;
 import pookyBlog.common.Dto.Request.PostSearch;
 import pookyBlog.common.Dto.Request.PostUpdate;
 import pookyBlog.common.Dto.Response.PostIndexResponse;
+import pookyBlog.common.Dto.Response.PostListResponse;
 import pookyBlog.common.Dto.Response.PostResponse;
 import pookyBlog.common.Entity.Post;
 import pookyBlog.post.Repository.PostCountRepository;
@@ -21,6 +22,7 @@ import pookyBlog.common.event.payload.PostUpdatedEventPayload;
 import pookyBlog.post.Entity.PostCount;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,7 +64,7 @@ public class PostService {
     }
 
     public PostResponse get(Long postId) {
-        Post post = postRepository.findByIdWithComments(postId)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 id입니다."));
 
         return PostResponse.builder()
@@ -71,14 +73,13 @@ public class PostService {
                 .content(post.getContent())
                 .writer(post.getWriter())
                 .createdDate(post.getCreatedDate())
-                .view(post.getView())
-                .comments(post.getComments())
+                .modifiedDate(post.getModifiedDate())
                 .build();
     }
 
-    public List<PostResponse> getListPosts(PostSearch postSearch) {
+    public List<PostListResponse> getListPosts(PostSearch postSearch) {
         return postRepository.getList(postSearch).stream()
-                .map(PostResponse::new)
+                .map(PostListResponse::new)
                 .collect(Collectors.toList());
     }
 
@@ -104,13 +105,14 @@ public class PostService {
                         .postId(post.getId())
                         .title(post.getTitle())
                         .content(post.getContent())
-                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
-                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .createdAt(LocalDate.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")).atStartOfDay())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 0L
         );
     }
 
+    @Transactional
     public void delete(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(()-> new IllegalArgumentException("존재하지 않는 id입니다."));
@@ -126,8 +128,8 @@ public class PostService {
                         .title(post.getTitle())
                         .content(post.getContent())
                         .writer(post.getWriter())
-                        .createdAt(LocalDateTime.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
-                        .updatedAt(LocalDateTime.parse(post.getModifiedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm")))
+                        .createdAt(LocalDate.parse(post.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")).atStartOfDay())
+                        .updatedAt(LocalDateTime.now())
                         .build(),
                 0L
         );

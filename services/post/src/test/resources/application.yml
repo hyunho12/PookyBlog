@@ -1,4 +1,8 @@
 # src/test/resources/application.yml
+outbox:
+  relay:
+    enabled: false
+
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver

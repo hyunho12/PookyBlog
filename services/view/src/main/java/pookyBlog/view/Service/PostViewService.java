@@ -6,6 +6,8 @@ import pookyBlog.view.Repository.PostViewCountRepository;
 import pookyBlog.view.Repository.PostViewDistributedLockRepository;
 
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -31,5 +33,9 @@ public class PostViewService {
 
     public Long count(Long postId){
         return postViewCountRepository.read(postId);
+    }
+
+    public Map<Long, Long> counts(List<Long> postIds) {
+        return postViewCountRepository.readAll(postIds.stream().distinct().toList());
     }
 }

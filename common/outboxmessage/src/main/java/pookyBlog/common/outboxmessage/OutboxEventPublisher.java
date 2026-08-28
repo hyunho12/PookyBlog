@@ -11,16 +11,15 @@ import pookyBlog.common.event.EventType;
 @Component
 @RequiredArgsConstructor
 public class OutboxEventPublisher { // 서비스로직에서 요청온 Event을 outbox테이블로 전송
-    private final Snowflake outboxIdSnowflake = new Snowflake();
-    private final Snowflake eventIdSnowflake = new Snowflake();
+    private final Snowflake snowflake;
     private final ApplicationEventPublisher applicationEventPublisher;
 
     public void publish(EventType type, EventPayload payload, Long shardKey){
         Outbox outbox = Outbox.create(
-                outboxIdSnowflake.nextId(),
+                snowflake.nextId(),
                 type,
                 Event.of(
-                        eventIdSnowflake.nextId(), type, payload
+                        snowflake.nextId(), type, payload
                 ).toJson(),
                 shardKey % MessageRelayConstants.SHARD_COUNT
         );

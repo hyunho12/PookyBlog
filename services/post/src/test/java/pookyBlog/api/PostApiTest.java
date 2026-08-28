@@ -2,6 +2,7 @@ package pookyBlog.api;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import pookyBlog.common.Dto.Request.PostCreate;
 import pookyBlog.common.Dto.Response.PostResponse;
+import pookyBlog.common.Entity.Comment;
+import pookyBlog.common.Entity.Post;
+import pookyBlog.common.Entity.Role;
+import pookyBlog.common.Entity.User;
 import pookyBlog.common.outboxmessage.Outbox;
 import pookyBlog.common.outboxmessage.OutboxEvent;
 import pookyBlog.common.snowflake.Snowflake;
@@ -24,6 +29,7 @@ import pookyBlog.post.PostApplication;
 import pookyBlog.post.Repository.PostCountRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -48,6 +54,9 @@ public class PostApiTest {
 
     @Autowired
     private ApplicationEvents applicationEvents;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     @DisplayName("게시글 생성 API가 POST_CREATED 이벤트와 payload를 발행한다")
@@ -82,6 +91,34 @@ public class PostApiTest {
         assertThat(payload.getTitle()).isEqualTo("test1");
         assertThat(payload.getContent()).isEqualTo("content1");
         assertThat(payload.getWriter()).isEqualTo("potter");
+    }
+
+    @Test
+    void listSerializationDoesNotExposeEntityGraphWhenPostHasCommentAndUser() throws Exception {
+        String suffix = UUID.randomUUID().toString().substring(0, 10);
+        User user = User.builder().id(snowflake.nextId()).username("post-" + suffix)
+                .nickname("nick-" + suffix).email(suffix + "@test.invalid")
+                .password("password").role(Role.USER).build();
+        Post post = Post.builder().id(snowflake.nextId()).title("graph-safe-title")
+                .content("content").writer(user.getNickname()).build();
+        Comment comment = Comment.builder().id(snowflake.nextId()).comments("comment")
+                .posts(post).user(user).build();
+        entityManager.persist(user);
+        entityManager.persist(post);
+        entityManager.persist(comment);
+        entityManager.flush();
+        entityManager.clear();
+
+        String json = mockMvc.perform(get("/posts").param("page", "1").param("size", "100"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+
+        var listedPost = objectMapper.readTree(json).findValues("id").stream()
+                .filter(node -> node.asLong() == post.getId()).findFirst();
+        assertThat(listedPost).isPresent();
+        assertThat(json.contains("\"comments\"")).isFalse();
+        assertThat(json.contains("\"user\"")).isFalse();
+        assertThat(json.contains("\"posts\"")).isFalse();
     }
 
     @Test

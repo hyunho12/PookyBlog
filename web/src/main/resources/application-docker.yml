@@ -1,0 +1,16 @@
+server:
+  port: 8087
+jwt:
+  secret: ${JWT_SECRET}
+auth:
+  cookie:
+    secure: false
+service:
+  url:
+    comment: http://comment-service:8080
+    hot-post: http://hot-post-service:8081
+    like: http://like-service:8082
+    post: http://post-service:8083
+    post-read: http://post-read-service:8086
+    user: http://user-service:8084
+    view: http://view-service:8085

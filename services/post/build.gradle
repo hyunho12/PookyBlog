@@ -15,14 +15,30 @@ dependencies {
     testImplementation 'org.springframework.kafka:spring-kafka'
     testImplementation 'org.awaitility:awaitility:4.2.0' // 또는 최신 버전
 }
+
+sourceSets {
+    performanceTest {
+        java.srcDir 'src/performanceTest/java'
+        resources.srcDir 'src/test/resources'
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+configurations {
+    performanceTestImplementation.extendsFrom testImplementation
+    performanceTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+tasks.register('performanceTest', Test) {
+    description = 'Runs the post service performance and bulk-data tests.'
+    group = 'verification'
+    testClassesDirs = sourceSets.performanceTest.output.classesDirs
+    classpath = sourceSets.performanceTest.runtimeClasspath
+    useJUnitPlatform()
+    shouldRunAfter tasks.named('test')
+}
+
 bootJar{
     enabled = true
-}
-//springBoot{
-//    mainClass = 'pookyBlog.PostApplication'
-//}
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.post.PostApplication")
-    }
 }

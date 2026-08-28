@@ -1,32 +1,11 @@
 {{>layout/header}}
-<br/>
-<div id="posts_list">
-    <div class="col-md-12">
-        <form class="card">
-            <div class="card-header d-flex justify-content-between">
-                <label for="id">번호 : {{posts.id}}</label>
-                <input type="hidden" id="id" value="{{posts.id}}"> {{! label 연결 }}
-                <label for="createdDate">{{posts.createdDate}}</label>
-            </div>
-            <div class="card-header d-flex justify-content-between">
-                <label for="writer">작성자 : {{posts.writer}}</label>
-                <label for="view"><i class=" bi bi-eye-fill"> {{posts.view}}</i></label>
-            </div>
-            <div class="card-body">
-                <label for="title">제목</label>
-                <input type="text" class="form-control" id="title" value="{{posts.title}}">
-            </div>
-
-            <div class="card-body">
-                <label for="content">내용</label>
-                <textarea rows="5" class="form-control" id="content">{{posts.content}}</textarea>
-            </div>
-        </form>
-
-        <!--버튼-->
-        <a href="/posts/read/{{id}}" role="button" class="btn btn-info bi bi-arrow-return-left"> 취소</a>
-        <button type="button" id="btn-update" class="btn btn-primary bi bi-pencil-square"> 완료</button>
-    </div>
+<div class="page-shell">
+    <div class="page-heading"><h1>게시글 수정</h1><p><strong>{{posts.writer}}</strong>님이 작성한 글을 수정합니다.</p></div>
+    <form id="post-form" class="surface-card content-form needs-validation" novalidate>
+        <input type="hidden" id="id" value="{{posts.id}}">
+        <div class="mb-4"><label for="title" class="form-label fw-semibold">제목 <span class="required-mark" aria-hidden="true">*</span></label><input class="form-control" id="title" value="{{posts.title}}" maxlength="200" required><div class="invalid-feedback">제목을 입력해 주세요.</div></div>
+        <div class="mb-4"><label for="content" class="form-label fw-semibold">내용 <span class="required-mark" aria-hidden="true">*</span></label><textarea rows="14" class="form-control" id="content" required>{{posts.content}}</textarea><div class="invalid-feedback">내용을 입력해 주세요.</div></div>
+        <div class="d-flex justify-content-end gap-2"><a href="/posts/getPost/{{posts.id}}" class="btn btn-outline-secondary">취소</a><button type="button" id="btn-update" class="btn btn-primary" data-loading-text="수정 중..."><i class="bi bi-check2 me-1"></i>수정 완료</button></div>
+    </form>
 </div>
-
 {{>layout/footer}}

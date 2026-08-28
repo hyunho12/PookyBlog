@@ -4,6 +4,7 @@ import pookyBlog.common.Dto.Request.PostCreate;
 import pookyBlog.common.Dto.Request.PostSearch;
 import pookyBlog.common.Dto.Request.PostUpdate;
 import pookyBlog.common.Dto.Response.PostResponse;
+import pookyBlog.common.Dto.Response.PostListResponse;
 import pookyBlog.post.Service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +33,7 @@ public class PostApiController {
     }
 
     @GetMapping("/posts")
-    public List<PostResponse> getListPosts(@ModelAttribute PostSearch postSearch){
+    public List<PostListResponse> getListPosts(@ModelAttribute PostSearch postSearch){
         return postService.getListPosts(postSearch);
     }
 

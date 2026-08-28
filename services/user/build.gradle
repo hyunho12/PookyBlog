@@ -13,11 +13,3 @@ dependencies {
 bootJar{
     enabled = true
 }
-//springBoot{
-//    mainClass = 'pookyBlog.PostApplication'
-//}
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.user.UserApplication")
-    }
-}

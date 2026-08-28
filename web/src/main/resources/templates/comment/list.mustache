@@ -1,37 +1,28 @@
-{{! Comments }}
-<div class="card">
-    <div class="card-header bi bi-chat-dots"> {{#comments.size}}{{comments.size}}{{/comments.size}} Comments</div>
-    {{! 댓글내용 부분 }}
-    <ul class="list-group-flush">
-        {{#comments}}
-            <li id="comments-{{id}}" class="list-group-item">
-                <span>
-                    <span style="font-size: small">{{user.nickname}}</span>
-                    <span style="font-size: xx-small">{{createdDate}}</span>
-                </span>
-                {{#isWriter}}
-                    <a type="button" data-toggle="collapse" data-target=".multi-collapse-{{id}}"
-                       class="bi bi-pencil-square"></a> {{! 댓글 수정 버튼 }}
-                    <a type="button" onclick="main.commentDelete({{postsId}},{{id}},{{userId}},{{user.id}})"
-                       class="bi bi-x-square"></a> {{! 댓글 삭제 버튼 }}
-                {{/isWriter}}
-
-                {{! 댓글 내용 보기 }}
-                <p class="collapse multi-collapse-{{id}} show">{{comments}}</p>
-
-                {{! 댓글 내용 수정 }}
-                <form class="collapse multi-collapse-{{id}}">
-                    <input type="hidden" id="id" value="{{id}}">
-                    <input type="hidden" id="postsId" value="{{posts.id}}">
-                    <input type="hidden" id="writerUserId" value="{{user.id}}">
-                    <input type="hidden" id="sessionUserId" value="{{#user}}{{user.id}}{{/user}}">
-                    <div class="form-group">
-                        <textarea class="form-control" id="comment-content" rows="3">{{comments}}</textarea>
-                    </div>
-                    <button type="button" id="btn-comment-update" class="btn btn-outline-primary bi bi-pencil-square"> 수정</button>
-                </form>
-            </li>
-        {{/comments}}
-    </ul>
+<div class="surface-card p-3 p-md-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 id="comments-heading" class="h5 fw-bold mb-0"><i class="bi bi-chat-dots me-2 text-primary"></i>댓글</h2>
+    </div>
+    {{#comments}}
+    <article class="comment-item" id="comment-{{id}}" data-comment-author="{{nickname}}">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div><span class="comment-author">{{nickname}}</span><span class="comment-date ms-2">{{createdDate}}</span></div>
+            {{#loggedIn}}
+            <div class="dropdown comment-owner-actions">
+                <button class="btn btn-sm btn-link text-secondary p-1" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="댓글 메뉴"><i class="bi bi-three-dots"></i></button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><button type="button" data-comment-id="{{id}}" class="btn-comment-edit dropdown-item"><i class="bi bi-pencil me-2"></i>수정</button></li>
+                    <li><button type="button" data-comment-id="{{id}}" class="btn-comment-delete dropdown-item text-danger"><i class="bi bi-trash3 me-2"></i>삭제</button></li>
+                </ul>
+            </div>
+            {{/loggedIn}}
+        </div>
+        <p class="comment-content">{{comments}}</p>
+        <div class="comment-edit-panel" id="comment-edit-{{id}}">
+            <label class="visually-hidden" for="comment-content-{{id}}">댓글 수정 내용</label>
+            <textarea class="form-control mb-2" id="comment-content-{{id}}" rows="3" required>{{comments}}</textarea>
+            <div class="d-flex justify-content-end gap-2"><button type="button" data-comment-id="{{id}}" class="btn-comment-cancel btn btn-sm btn-outline-secondary">취소</button><button type="button" data-comment-id="{{id}}" class="btn-comment-update btn btn-sm btn-primary" data-loading-text="수정 중...">저장</button></div>
+        </div>
+    </article>
+    {{/comments}}
+    {{^comments}}<div class="empty-state py-5"><i class="bi bi-chat-square-text"></i><p class="mb-0">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p></div>{{/comments}}
 </div>
-<br/>

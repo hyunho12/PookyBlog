@@ -1,19 +1,13 @@
 {{>layout/header}}
-<div id="posts_list">
-    <div class="container col-md-8">
-        <form>
-            <div class="form-group">
-                <label for="title">제목</label>
-                <input type="text" class="form-control" id="title" placeholder="제목을 입력하세요">
-            </div>
-            <input type="hidden" class="form-control" id="writer" value="{{user.nickname}}">
-            <div class="form-group">
-                <label for="content">내용</label>
-                <textarea rows="10" class="form-control" id="content" placeholder="내용을 입력하세요"></textarea>
-            </div>
-        </form>
-        <button type="button" id="btn-save" class="btn btn-primary bi bi-pencil-fill"> 작성</button>
-        <a href="/" role="button" class="btn btn-info bi bi-arrow-return-left"> 목록</a>
-    </div>
+<div class="page-shell">
+    <div class="page-heading"><h1>새 글 작성</h1><p>경험과 지식을 커뮤니티에 공유해 주세요.</p></div>
+    {{#user}}
+    <form id="post-form" class="surface-card content-form needs-validation" novalidate>
+        <div class="mb-4"><label for="title" class="form-label fw-semibold">제목 <span class="required-mark" aria-hidden="true">*</span></label><input type="text" class="form-control" id="title" placeholder="게시글 제목을 입력하세요" maxlength="200" required><div class="invalid-feedback">제목을 입력해 주세요.</div></div>
+        <div class="mb-4"><label for="content" class="form-label fw-semibold">내용 <span class="required-mark" aria-hidden="true">*</span></label><textarea class="form-control" id="content" rows="14" placeholder="내용을 입력하세요" required></textarea><div class="invalid-feedback">내용을 입력해 주세요.</div></div>
+        <div class="d-flex justify-content-end gap-2"><a href="/" class="btn btn-outline-secondary">취소</a><button type="button" id="btn-save" class="btn btn-primary" data-loading-text="저장 중..."><i class="bi bi-check2 me-1"></i>저장</button></div>
+    </form>
+    {{/user}}
+    {{^user}}<div class="surface-card empty-state"><i class="bi bi-lock"></i><h2 class="h5 text-dark">로그인이 필요합니다.</h2><p>게시글을 작성하려면 먼저 로그인해 주세요.</p><a class="btn btn-primary" href="/auth/login">로그인</a></div>{{/user}}
 </div>
 {{>layout/footer}}

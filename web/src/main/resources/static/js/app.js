@@ -1,294 +1,198 @@
 const main = {
-    init : function (){
-        const _this = this;
+    init() {
+        this.showStoredFeedback();
+        this.applyCommentOwnershipUi();
+        $('#btn-save').on('click', event => this.createPost(event.currentTarget));
+        $('#btn-update').on('click', event => this.updatePost(event.currentTarget));
+        $('#btn-delete').on('click', event => this.deletePost(event.currentTarget));
+        $('#btn-signup').on('click', event => this.signUp(event.currentTarget));
+        $('#btn-login').on('click', event => this.login(event.currentTarget));
+        $('#btn-logout').on('click', event => this.logout(event.currentTarget));
+        $('#btn-comment-save').on('click', event => this.commentSave(event.currentTarget));
+        $('.btn-comment-edit').on('click', event => this.toggleCommentEdit(event.currentTarget.dataset.commentId, true));
+        $('.btn-comment-cancel').on('click', event => this.toggleCommentEdit(event.currentTarget.dataset.commentId, false));
+        $('.btn-comment-update').on('click', event => this.commentUpdate(event.currentTarget));
+        $('.btn-comment-delete').on('click', event => this.commentDelete(event.currentTarget));
+        $('#btn-like').on('click', event => this.like(event.currentTarget));
+        $('#btn-unlike').on('click', event => this.unlike(event.currentTarget));
+        const postId = $('#id').val();
+        if (postId && $('#view-count').length) this.increaseView(postId);
+    },
 
-        // 페이지 로드시 JWT 인증확인
-        if (window.location.pathname !== '/' && window.location.pathname !== '/auth/login') {
-            _this.checkAuth();
-        }
-
-        //게시글 저장
-        $('#btn-save').on('click', function () {
-            //_this.checkAuth();
-            _this.createPost();
-        });
-
-        //게시글 수정
-        $('#btn-update').on('click', function () {
-            _this.updatePost();
-        });
-
-        //게시글 삭제
-        $('#btn-delete').on('click', function () {
-            _this.delete();
-        });
-
-        //회원가입
-        $('#btn-signup').on('click', function () {
-            _this.signUp();
-        });
-
-        //로그인
-        $('#btn-login').on('click', function () {
-            _this.login();
-        });
-
-        //로그아웃
-        $('#btn-logout').on('click', function () {
-            _this.logout();
-        });
-
-        //댓글저장
-        $('#btn-comment-save').on('click', function () {
-            _this.commentSave();
+    applyCommentOwnershipUi() {
+        const currentUser = document.body.dataset.currentUser;
+        $('.comment-item').each(function () {
+            const isOwner = currentUser && this.dataset.commentAuthor === currentUser;
+            $(this).find('.comment-owner-actions').toggleClass('d-none', !isOwner);
         });
     },
 
-    checkAuth: function () {
-        const token = localStorage.getItem('jwtToken');
-        if(!token){
-            return;
-        }
-
-        $.ajax({
-            type: 'GET',
-            url: '/auth/check-auth',
-            xhrFields: { withCredentials: true }
-        }).done(function (response) {
-            console.log("인증 확인 성공:", response);
-        }).fail(function (error) {
-            console.log("인증 실패:", error);
-            alert("로그인이 필요합니다.");
-            localStorage.removeItem('jwtToken')
-            window.location.href = '/auth/login'; // 로그인 페이지로 이동
-        });
+    ajax(method, url, data) {
+        return $.ajax({method, url, contentType: 'application/json; charset=utf-8',
+            data: data === undefined ? undefined : JSON.stringify(data), xhrFields: {withCredentials: true}});
     },
 
-    createPost : function (){
-        // if(!jwtToken){
-        //     alert("로그인이 필요합니다.");
-        //     window.location.href = '/auth/login';
-        //     return;
-        // }
+    validateForm(selector) {
+        const form = document.querySelector(selector);
+        if (!form) return true;
+        form.classList.add('was-validated');
+        return form.checkValidity();
+    },
 
-        const data = {
-            title: $('#title').val(),
-            writer: $('#writer').val(),
-            content: $('#content').val()
-        };
-
-        if(!data.title || data.title.trim() === "" || !data.content || data.content.trim() === ""){
-            alert("공백 또는 입력되지 않은 부분이 있습니다.");
-            return false;
-        }
-        else{
-            $.ajax({
-                type: 'POST',
-                url: '/posts/create',
-                dataType: 'JSON',
-                contentType: 'application/json; charset=utf-8',
-                xhrFields: { withCredentials: true }, // 쿠키 포함
-                data: JSON.stringify(data),
-                beforeSend: function (xhr) {
-                    const token = localStorage.getItem('jwtToken');
-                    if (token) {
-                        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-                    }
-                }
-            }).done(function () {
-                alert('등록되었습니다.');
-                window.location.href = '/';
-            }).fail(function (error) {
-                alert(JSON.stringify(error));
-            });
+    setBusy(button, busy) {
+        if (!button) return;
+        if (busy) {
+            button.dataset.originalHtml = button.innerHTML;
+            button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${button.dataset.loadingText || '처리 중...'}`;
+            button.disabled = true;
+        } else {
+            button.innerHTML = button.dataset.originalHtml || button.innerHTML;
+            button.disabled = false;
         }
     },
 
-    updatePost : function (){
-        const data = {
-            id: $('#id').val(),
-            title: $('#title').val(),
-            content: $('#content').val()
-        };
-
-        const con_check = confirm("수정하시겠습니까?");
-        if(con_check === true){
-            if(!data.title || data.title.trim() === "" || !data.content || data.content.trim() === ""){
-                alert("공백 또는 입력하지 않은 부분이 있습니다.");
-                return false;
-            }
-            else{
-                $.ajax({
-                    type: 'PATCH',
-                    url: '/posts/update/' + data.id,
-                    dataType: 'JSON',
-                    contentType: 'application/json; charset=utf-8',
-                    xhrFields: { withCredentials: true }, // 쿠키 포함
-                    data: JSON.stringify(data)
-                }).done(function (){
-                    alert("수정되었습니다.");
-                    window.location.href = '/posts/getPost/' + data.id;
-                }).fail(function (error){
-                    alert(JSON.stringify(error));
-                });
-            }
-        }
-
+    showFeedback(message, type = 'success') {
+        const region = $('#feedback');
+        if (!region.length) return;
+        region.html(`<div class="alert alert-${type} alert-dismissible fade show" role="alert">${this.escapeHtml(message)}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="닫기"></button></div>`);
+        window.setTimeout(() => {
+            const alertElement = region.find('.alert').get(0);
+            if (alertElement) bootstrap.Alert.getOrCreateInstance(alertElement).close();
+        }, 5000);
     },
 
-    delete : function () {
+    storeFeedback(message, type = 'success') {
+        sessionStorage.setItem('pookyBlogFeedback', JSON.stringify({message, type}));
+    },
+
+    showStoredFeedback() {
+        const raw = sessionStorage.getItem('pookyBlogFeedback');
+        if (!raw) return;
+        sessionStorage.removeItem('pookyBlogFeedback');
+        try { const feedback = JSON.parse(raw); this.showFeedback(feedback.message, feedback.type); } catch (_) { /* ignore malformed UI state */ }
+    },
+
+    errorMessage(error, fallback = '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.') {
+        return error.responseJSON?.message || error.responseJSON?.error || error.responseText || fallback;
+    },
+
+    escapeHtml(value) {
+        return $('<div>').text(value == null ? '' : String(value)).html();
+    },
+
+    createPost(button) {
+        if (!this.validateForm('#post-form')) return;
+        const data = {title: $('#title').val().trim(), content: $('#content').val().trim()};
+        this.setBusy(button, true);
+        this.ajax('POST', '/api/posts', data).done(() => { this.storeFeedback('게시글이 등록되었습니다.'); location.href = '/'; })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    updatePost(button) {
+        if (!this.validateForm('#post-form')) return;
+        const id = $('#id').val(), data = {title: $('#title').val().trim(), content: $('#content').val().trim()};
+        if (!confirm('게시글을 수정하시겠습니까?')) return;
+        this.setBusy(button, true);
+        this.ajax('PATCH', `/api/posts/${id}`, data).done(() => { this.storeFeedback('게시글이 수정되었습니다.'); location.href = `/posts/getPost/${id}`; })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    deletePost(button) {
         const id = $('#id').val();
-        const con_check = confirm("정말 삭제하시겠습니까?");
-
-        if(con_check == true) {
-            $.ajax({
-                type: 'DELETE',
-                url: '/posts/delete/'+id,
-                dataType: 'JSON',
-                contentType: 'application/json; charset=utf-8',
-                xhrFields: { withCredentials: true } // 쿠키 포함
-            }).done(function () {
-                alert("삭제되었습니다.");
-                window.location.href = '/';
-            }).fail(function (error) {
-                alert(JSON.stringify(error));
-            });
-        } else {
-            return false;
-        }
+        if (!confirm('게시글을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+        this.setBusy(button, true);
+        this.ajax('DELETE', `/api/posts/${id}`).done(() => { this.storeFeedback('게시글이 삭제되었습니다.'); location.href = '/'; })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
     },
 
-    signUp: function () {
-        const data = {
-            username: $('#username').val(),
-            password: $('#password').val(),
-            nickname: $('#nickname').val(),
-            email: $('#email').val()
-        };
-
-        // 필드 검증
-        if (!data.username || data.username.trim() === "" ||
-            !data.password || data.password.trim() === "" ||
-            !data.nickname || data.nickname.trim() === "" ||
-            !data.email || data.email.trim() === "") {
-            alert("공백 또는 입력되지 않은 부분이 있습니다.");
-            return false;
-        }
-
-        $.ajax({
-            type: 'POST',
-            url: '/auth/signup',
-            dataType: 'JSON',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data)
-        }).done(function () {
-            alert("회원가입이 완료되었습니다.");
-            window.location.href = '/auth/login'; // 로그인 페이지로 이동
-        }).fail(function (error) {
-            // 에러 메시지를 화면에 표시
-            if (error.responseJSON) {
-                const errors = error.responseJSON;
-                if (errors.valid_username) {
-                    $('#valid_username').text(errors.valid_username);
-                }
-                if (errors.valid_password) {
-                    $('#valid_password').text(errors.valid_password);
-                }
-                if (errors.valid_nickname) {
-                    $('#valid_nickname').text(errors.valid_nickname);
-                }
-                if (errors.valid_email) {
-                    $('#valid_email').text(errors.valid_email);
-                }
-            } else {
-                alert("회원가입에 실패했습니다.");
-            }
-        });
+    signUp(button) {
+        if (!this.validateForm('#signup-form')) return;
+        const data = {username: $('#username').val().trim(), password: $('#password').val(), nickname: $('#nickname').val().trim(), email: $('#email').val().trim()};
+        this.setBusy(button, true);
+        this.ajax('POST', '/api/auth/signup', data).done(() => { this.storeFeedback('회원가입이 완료되었습니다. 로그인해 주세요.'); location.href = '/auth/login'; })
+            .fail(error => this.showFeedback(this.errorMessage(error, '회원가입 정보를 확인해 주세요.'), 'danger')).always(() => this.setBusy(button, false));
     },
 
-    login: function () {
-        const data = {
-            username: $('#username').val(),
-            password: $('#password').val()
-        };
-
-        if (!data.username || data.username.trim() === "" || !data.password || data.password.trim() === "") {
-            $('#error-message').text("아이디와 비밀번호를 입력해주세요.");
-            return false;
-        }
-
-        $.ajax({
-            type: 'POST',
-            url: '/api/auth/login',
-            dataType: 'JSON',
-            contentType: 'application/json; charset=utf-8',
-            data: JSON.stringify(data),
-            //xhrFields: { withCredentials: true } // 쿠키 포함
-        }).done(function (response) {
-            if (response.accessToken) {
-                // 응답으로 받은 accessToken을 localStorage에 저장
-                localStorage.setItem('jwtToken', response.accessToken);
-                alert("로그인 성공!");
-                window.location.href = '/';
-            } else {
-                $('#error-message').text("로그인에 성공했으나 토큰을 받지 못했습니다.");
-            }
-        }).fail(function (error) {
-            if (error.responseJSON && error.responseJSON.message) {
-                $('#error-message').text(error.responseJSON.message);
-            } else {
-                $('#error-message').text("로그인 중 오류가 발생했습니다.");
-            }
-        });
+    login(button) {
+        if (!this.validateForm('#login-form')) return;
+        const data = {username: $('#username').val().trim(), password: $('#password').val()};
+        $('#error-message').addClass('d-none').empty();
+        this.setBusy(button, true);
+        this.ajax('POST', '/api/auth/login', data).done(() => { this.storeFeedback('로그인되었습니다.'); location.href = '/'; })
+            .fail(error => $('#error-message').removeClass('d-none').text(this.errorMessage(error, '아이디 또는 비밀번호를 확인해 주세요.')))
+            .always(() => this.setBusy(button, false));
     },
 
-    logout: function () {
-        $.ajax({
-            type: 'POST',
-            url: '/auth/logout',
-            dataType: 'JSON',
-            contentType: 'application/json; charset=utf-8',
-            xhrFields: { withCredentials: true } // 쿠키 포함
-        }).done(function () {
-            localStorage.removeItem('jwtToken');
-            alert("로그아웃 되었습니다.");
-            window.location.href = '/';
-        }).fail(function (error) {
-            alert("로그아웃 실패: " + JSON.stringify(error));
-        });
+    logout(button) {
+        this.setBusy(button, true);
+        this.ajax('POST', '/api/auth/logout').done(() => { this.storeFeedback('안전하게 로그아웃되었습니다.'); location.href = '/'; })
+            .fail(error => this.showFeedback(this.errorMessage(error, '로그아웃하지 못했습니다.'), 'danger')).always(() => this.setBusy(button, false));
     },
 
-    commentSave : function () {
-        const data = {
-            postsId: $('#postsId').val(),
-            userId: $('#userId').val(),
-            comment: $('#comment').val()
-        }
+    commentSave(button) {
+        if (!this.validateForm('#comment-form')) return;
+        const postId = $('#postsId').val(), comment = $('#comment').val().trim();
+        this.setBusy(button, true);
+        this.ajax('POST', `/api/posts/${postId}/comments`, {comment}).done(() => { this.storeFeedback('댓글이 등록되었습니다.'); location.reload(); })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
 
-        // 값이 정상적으로 가져와지는지 로그 확인
-        console.log("postsId: ", data.postsId);
-        console.log("userId: ", data.userId);
-        console.log("comment: ", data.comment);
+    toggleCommentEdit(id, open) {
+        $(`#comment-edit-${id}`).toggleClass('is-open', open);
+        if (open) $(`#comment-content-${id}`).trigger('focus');
+    },
 
-        // 공백 및 빈 문자열 체크
-        if (!data.postsId || !data.userId || !data.comment || data.comment.trim() === "") {
-            alert("공백 또는 입력하지 않은 부분이 있습니다.");
-            return false;
-        } else {
-            $.ajax({
-                type: 'POST',
-                url: '/api/comments/create',
-                dataType: 'JSON',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(data)
-            }).done(function () {
-                alert('댓글이 등록되었습니다.');
-                window.location.reload();
-            }).fail(function (error) {
-                alert(JSON.stringify(error));
-            });
-        }
+    commentUpdate(button) {
+        const id = button.dataset.commentId, content = $(`#comment-content-${id}`).val().trim();
+        if (!content) { this.showFeedback('댓글 내용을 입력해 주세요.', 'warning'); return; }
+        this.setBusy(button, true);
+        this.ajax('PUT', `/api/comments/${id}`, {content}).done(() => { this.storeFeedback('댓글이 수정되었습니다.'); location.reload(); })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    commentDelete(button) {
+        const id = button.dataset.commentId;
+        if (!confirm('댓글을 삭제하시겠습니까?')) return;
+        this.setBusy(button, true);
+        this.ajax('DELETE', `/api/comments/${id}`).done(() => { this.storeFeedback('댓글이 삭제되었습니다.'); location.reload(); })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    like(button) {
+        const id = $('#id').val(); this.setBusy(button, true);
+        this.ajax('POST', `/api/posts/${id}/likes`).done(() => { this.showFeedback('이 게시글을 좋아합니다.'); this.refreshLikeCount(id); })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    unlike(button) {
+        const id = $('#id').val(); this.setBusy(button, true);
+        this.ajax('DELETE', `/api/posts/${id}/likes`).done(() => { this.showFeedback('좋아요를 취소했습니다.', 'secondary'); this.refreshLikeCount(id); })
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    renderCount(selector, response) {
+        const count = response && typeof response === 'object' && response.count !== undefined
+            ? response.count : response;
+        $(selector).text(String(count));
+    },
+
+    refreshLikeCount(id) {
+        return $.get(`/api/posts/${id}/likes/count`)
+            .done(count => this.renderCount('#like-count', count))
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger'));
+    },
+
+    refreshViewCount(id) {
+        return $.get(`/api/posts/${id}/views/count`)
+            .done(count => this.renderCount('#view-count', count))
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger'));
+    },
+
+    increaseView(id) {
+        this.ajax('POST', `/api/posts/${id}/views`)
+            .done(() => this.refreshViewCount(id))
+            .fail(error => this.showFeedback(this.errorMessage(error), 'danger'));
     }
 };
 
-main.init();
+$(function () { main.init(); });

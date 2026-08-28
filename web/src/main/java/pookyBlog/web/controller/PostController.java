@@ -11,10 +11,16 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 import pookyBlog.common.Dto.Request.PostSearch;
-import pookyBlog.common.Dto.Response.PostIndexResponse;
+import pookyBlog.common.Dto.Request.PostViewCountsRequest;
 import pookyBlog.common.Dto.Response.PostResponse;
-import pookyBlog.common.Entity.Comment;
+import pookyBlog.common.Dto.Response.PostListResponse;
+import pookyBlog.common.Dto.Response.PostListViewResponse;
+import pookyBlog.common.Dto.Response.PostViewCountsResponse;
+import pookyBlog.common.Dto.Response.CommentResponse;
+import pookyBlog.common.Dto.Response.AuthMeResponse;
 import pookyBlog.common.Entity.User;
 import reactor.core.publisher.Mono;
 
@@ -43,17 +49,33 @@ public class PostController {
             // post-service에서 페이징된 게시글 목록 가져오기
             // Page<T>는 직접 변환이 까다로우므로, 사용자 정의 Page 구현체나 List로 받는 것이 일반적입니다.
             // 여기서는 List를 받는 방식으로 구현하고, 페이징 정보는 별도로 처리한다고 가정합니다.
-            List<PostIndexResponse> posts = postWebClient.get()
-                    .uri(uriBuilder -> uriBuilder.path("/api/posts")
+            List<PostListResponse> posts = postWebClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/posts")
                             .queryParam("page", postSearch.getPage())
                             .queryParam("size", postSearch.getSize())
                             .build())
                     .retrieve()
-                    .bodyToFlux(PostIndexResponse.class)
+                    .bodyToFlux(PostListResponse.class)
                     .collectList()
                     .block(); // 템플릿 렌더링을 위해 동기적으로 결과를 기다립니다.
 
-            model.addAttribute("posts", posts);
+            List<PostListViewResponse> postsWithViews;
+            if (posts.isEmpty()) {
+                postsWithViews = List.of();
+            } else {
+                PostViewCountsResponse viewCounts = viewWebClient.post()
+                        .uri("/post-view/counts")
+                        .headers(headers -> setBearerAuth(headers, token))
+                        .bodyValue(new PostViewCountsRequest(posts.stream().map(PostListResponse::getId).toList()))
+                        .retrieve()
+                        .bodyToMono(PostViewCountsResponse.class)
+                        .block();
+                postsWithViews = posts.stream()
+                        .map(post -> new PostListViewResponse(post, viewCounts.counts().get(post.getId())))
+                        .toList();
+            }
+
+            model.addAttribute("posts", postsWithViews);
 
             // TODO: 실제 페이징 UI를 구현하려면 post-service의 API가 전체 페이지 수, 현재 페이지 등의 정보를 함께 반환해야 합니다.
             // 예: 응답 객체를 { "content": [...], "totalPages": 10, "currentPage": 1 } 와 같이 설계
@@ -96,10 +118,18 @@ public class PostController {
 
         try {
             // 1. 병렬 API 호출을 위한 Mono 준비
-            Mono<PostResponse> postMono = postWebClient.get().uri("/api/posts/{postId}", id).retrieve().bodyToMono(PostResponse.class);
-            Mono<List<Comment>> commentsMono = commentWebClient.get().uri("/api/posts/{postId}/comments", id).retrieve().bodyToMono(new ParameterizedTypeReference<>() {});
-            Mono<Long> likesMono = likeWebClient.get().uri("/api/posts/{postId}/likes/count", id).retrieve().bodyToMono(Long.class);
-            Mono<Long> viewsMono = viewWebClient.get().uri("/api/posts/{postId}/views/count", id).retrieve().bodyToMono(Long.class);
+            Mono<PostResponse> postMono = postWebClient.get().uri("/posts/{postId}", id)
+                    .headers(headers -> setBearerAuth(headers, token))
+                    .retrieve().bodyToMono(PostResponse.class);
+            Mono<List<CommentResponse>> commentsMono = commentWebClient.get().uri("/api/posts/{postId}", id)
+                    .headers(headers -> setBearerAuth(headers, token))
+                    .retrieve().bodyToMono(new ParameterizedTypeReference<>() {});
+            Mono<Long> likesMono = likeWebClient.get().uri("/likes/count/{postId}", id)
+                    .headers(headers -> setBearerAuth(headers, token))
+                    .retrieve().bodyToMono(Long.class);
+            Mono<Long> viewsMono = viewWebClient.get().uri("/post-view/{postId}/count", id)
+                    .headers(headers -> setBearerAuth(headers, token))
+                    .retrieve().bodyToMono(Long.class);
 
             // 2. 모든 Mono가 완료될 때까지 기다렸다가 결과를 한 번에 처리
             Mono.zip(postMono, commentsMono, likesMono, viewsMono)
@@ -121,10 +151,10 @@ public class PostController {
 
         } catch (WebClientResponseException.NotFound e) {
             log.warn("Post not found for id: {}", id);
-            return "error/404"; // 게시글이 없을 경우 404 페이지로 이동
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.", e);
         } catch (Exception e) {
             log.error("Failed to fetch post details for id {}: {}", id, e.getMessage());
-            return "error/500"; // 기타 에러 발생 시 500 페이지로 이동
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "게시글 상세 조회에 실패했습니다.", e);
         }
 
         return "posts/posts-read";
@@ -134,10 +164,12 @@ public class PostController {
      * 글 수정 페이지로 이동합니다.
      */
     @GetMapping("/posts/update/{id}")
-    public String updatePostForm(Model model, @PathVariable Long id) {
+    public String updatePostForm(Model model, @PathVariable Long id,
+                                 @CookieValue(name = "jwtToken", required = false) String token) {
+        addUserInfoToModel(model, token);
         try {
             PostResponse postResponse = postWebClient.get()
-                    .uri("/api/posts/{postId}", id)
+                    .uri("/posts/{postId}", id)
                     .retrieve()
                     .bodyToMono(PostResponse.class)
                     .block();
@@ -167,14 +199,21 @@ public class PostController {
 
         try {
             // user-service에 "내 정보 조회" API가 있다고 가정 (예: /api/users/me)
-            User user = userWebClient.get()
-                    .uri("/api/users/me") // 이 API는 user-service에 구현되어 있어야 합니다.
+            AuthMeResponse authenticatedUser = userWebClient.get()
+                    .uri("/auth/me")
                     .headers(headers -> headers.setBearerAuth(token))
                     .retrieve()
-                    .bodyToMono(User.class)
+                    .bodyToMono(AuthMeResponse.class)
                     .block();
 
+            User user = User.builder()
+                    .id(authenticatedUser.id())
+                    .username(authenticatedUser.username())
+                    .nickname(authenticatedUser.nickname())
+                    .build();
+
             model.addAttribute("user", user);
+            model.addAttribute("loggedIn", true);
 
         } catch (WebClientResponseException e) {
             // 4xx, 5xx 에러 (토큰 만료, 비유효 등)
@@ -182,6 +221,12 @@ public class PostController {
         } catch (Exception e) {
             // 네트워크 오류 등 기타 예외
             log.error("An unexpected error occurred while fetching user info: {}", e.getMessage());
+        }
+    }
+
+    private void setBearerAuth(org.springframework.http.HttpHeaders headers, String token) {
+        if (token != null && !token.isBlank()) {
+            headers.setBearerAuth(token);
         }
     }
 }

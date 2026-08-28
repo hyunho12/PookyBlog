@@ -2,6 +2,7 @@ package pookyBlog.comment.Service;
 
 import pookyBlog.common.Dto.Request.CommentCreate;
 import pookyBlog.common.Dto.Request.CommentUpdate;
+import pookyBlog.common.Dto.Response.CommentResponse;
 import pookyBlog.common.Entity.Comment;
 import pookyBlog.common.Entity.Post;
 import pookyBlog.common.Entity.User;
@@ -17,6 +18,7 @@ import pookyBlog.common.event.payload.CommentDeletedEventPayload;
 import pookyBlog.common.snowflake.Snowflake;
 import pookyBlog.user.Repository.UserRepository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -59,7 +61,7 @@ public class CommentService {
                         .content(comment.getComments())
                         .postId(comment.getPosts().getId())
                         .writer(comment.getPosts().getWriter())
-                        .createdAt(LocalDateTime.parse(comment.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .createdAt(LocalDateTime.now())
                         .postCommentCount(commentRepository.countByPosts_Id(comment.getPosts().getId()))
                         .build(),
                 0L
@@ -69,19 +71,24 @@ public class CommentService {
         return comment.getId();
     }
 
-    public List<Comment> getComment(Long postId){
-        return commentRepository.findByPostId(postId);
+    @Transactional(readOnly = true)
+    public List<CommentResponse> getComment(Long postId){
+        return commentRepository.findByPostId(postId).stream()
+                .map(CommentResponse::new)
+                .toList();
     }
 
     @Transactional
-    public void update(Long commentId, CommentUpdate commentUpdate){
+    public void update(Long commentId, Long userId, CommentUpdate commentUpdate){
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+        requireOwner(comment, userId);
         comment.update(commentUpdate.getContent());
     }
 
     @Transactional
-    public void delete(Long commentId){
+    public void delete(Long commentId, Long userId){
         Comment comment = commentRepository.findById(commentId).orElseThrow(()-> new IllegalArgumentException("존재하지 않는 댓글입니다."));
+        requireOwner(comment, userId);
         commentRepository.delete(comment);
 
         outboxEventPublisher.publish(
@@ -92,7 +99,7 @@ public class CommentService {
                         .postId(comment.getPosts().getId())
                         .writerId(comment.getUser().getId())
                         .deleted(true)
-                        .createdAt(LocalDateTime.parse(comment.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")))
+                        .createdAt(LocalDate.parse(comment.getCreatedDate(), DateTimeFormatter.ofPattern("yyyy.MM.dd")).atStartOfDay())
                         .postCommentCount(commentRepository.countByPosts_Id(comment.getPosts().getId()))
                         .build(),
                 0L
@@ -102,5 +109,11 @@ public class CommentService {
     @Transactional(readOnly = true)
     public Long count(Long postId){
         return commentRepository.countByPosts_Id(postId);
+    }
+
+    private void requireOwner(Comment comment, Long userId) {
+        if (userId == null || !userId.equals(comment.getUser().getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("댓글 작성자만 변경할 수 있습니다.");
+        }
     }
 }

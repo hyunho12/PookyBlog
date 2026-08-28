@@ -26,6 +26,7 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest(classes = LikeApplication.class)
@@ -72,9 +73,11 @@ class LikeServiceTest {
                 .role(Role.USER)
                 .build();
         userId = userRepository.save(user).getId();
+        long initialCount = likeService.getPostLikeCount(postId);
 
         // 좋아요
         likeService.likePost(userId, postId);
+        assertEquals(initialCount + 1, likeService.getPostLikeCount(postId));
 
         // 좋아요 여부 확인
         boolean hasLiked = likeService.hasUserLikePost(userId, postId);
@@ -82,6 +85,7 @@ class LikeServiceTest {
 
         // 좋아요 취소
         likeService.unlikePost(userId, postId);
+        assertEquals(initialCount, likeService.getPostLikeCount(postId));
 
         // 다시확인
         boolean hasLikeAfterUnlike = likeService.hasUserLikePost(userId, postId);

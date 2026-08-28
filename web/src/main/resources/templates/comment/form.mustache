@@ -1,20 +1,12 @@
-<div class="card">
-    <div class="card-header bi bi-chat-right-dots"> Write a Comment</div>
-    {{! 댓글작성 부분}}
-    <form>
-        <input type="hidden" id="postsId" value="{{posts.id}}">
-        {{#user}}
-            <input type="hidden" id="userId" value="{{user.id}}">
-
-            <div class="card-body">
-                <textarea id="comment" class="form-control" rows="4" placeholder="댓글을 입력하세요"></textarea>
-            </div>
-            <div class="card-footer">
-                <button type="button" id="btn-comment-save" class="btn btn-outline-primary bi bi-pencil-square"> 등록</button>
-            </div>
-        {{/user}}
-        {{^user}}
-            <div class="card-body" style="font-size: small"><a href="/auth/login">로그인</a>을 하시면 댓글을 등록할 수 있습니다.</div>
-        {{/user}}
+<div class="surface-card p-3 p-md-4 mt-3">
+    <input type="hidden" id="postsId" value="{{posts.id}}">
+    {{#user}}
+    <form id="comment-form" class="needs-validation" novalidate>
+        <label for="comment" class="form-label fw-semibold">댓글 작성</label>
+        <textarea id="comment" class="form-control" rows="4" maxlength="1000" placeholder="서로를 존중하는 댓글을 남겨주세요." required></textarea>
+        <div class="invalid-feedback">댓글 내용을 입력해 주세요.</div>
+        <div class="d-flex justify-content-end mt-3"><button type="button" id="btn-comment-save" class="btn btn-primary" data-loading-text="등록 중..."><i class="bi bi-send me-1"></i>댓글 등록</button></div>
     </form>
+    {{/user}}
+    {{^user}}<div class="text-center py-3"><p class="text-secondary mb-3">댓글을 작성하려면 로그인이 필요합니다.</p><a class="btn btn-outline-primary" href="/auth/login">로그인하기</a></div>{{/user}}
 </div>

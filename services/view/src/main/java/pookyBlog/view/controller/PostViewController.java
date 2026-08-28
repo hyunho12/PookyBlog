@@ -3,6 +3,8 @@ package pookyBlog.view.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import pookyBlog.view.Service.PostViewService;
+import pookyBlog.common.Dto.Request.PostViewCountsRequest;
+import pookyBlog.common.Dto.Response.PostViewCountsResponse;
 
 @RequestMapping("/post-view")
 @RestController
@@ -18,5 +20,10 @@ public class PostViewController {
     @GetMapping("/{postId}/count")
     public Long count(@PathVariable("postId") Long postId){
         return postViewService.count(postId);
+    }
+
+    @PostMapping("/counts")
+    public PostViewCountsResponse counts(@RequestBody PostViewCountsRequest request) {
+        return new PostViewCountsResponse(postViewService.counts(request.postIds()));
     }
 }

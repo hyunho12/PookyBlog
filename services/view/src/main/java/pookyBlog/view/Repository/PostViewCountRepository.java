@@ -4,13 +4,17 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 @Repository
 @RequiredArgsConstructor
 public class PostViewCountRepository {
     private final StringRedisTemplate redisTemplate;
 
     // view::post::{post_id}::view_count
-    private static final String KEY_FORMAT = "view::post::{post_id}::view_count";
+    private static final String KEY_FORMAT = "view::post::%s::view_count";
 
     public Long read(Long postId){
         String result = redisTemplate.opsForValue().get(generateKey(postId));
@@ -19,6 +23,20 @@ public class PostViewCountRepository {
 
     public Long increase(Long postId){
         return redisTemplate.opsForValue().increment(generateKey(postId), 1);
+    }
+
+    public Map<Long, Long> readAll(List<Long> postIds) {
+        if (postIds.isEmpty()) {
+            return Map.of();
+        }
+        List<String> values = redisTemplate.opsForValue().multiGet(
+                postIds.stream().map(this::generateKey).toList());
+        Map<Long, Long> counts = new LinkedHashMap<>();
+        for (int index = 0; index < postIds.size(); index++) {
+            String value = values == null ? null : values.get(index);
+            counts.put(postIds.get(index), value == null ? 0L : Long.valueOf(value));
+        }
+        return counts;
     }
 
     private String generateKey(Long postId){

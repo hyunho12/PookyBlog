@@ -20,11 +20,3 @@ bootJar{
 jar{
     enabled = false
 }
-//springBoot{
-//    mainClass = 'pookyBlog.CommentApplication'
-//}
-tasks.named("bootJar") {
-    manifest {
-        attributes("Main-Class": "pookyBlog.CommentApplication")
-    }
-}
