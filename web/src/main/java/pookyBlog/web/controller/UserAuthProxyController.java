@@ -46,13 +46,11 @@ public class UserAuthProxyController {
                                     ResponseEntity.BodyBuilder builder =
                                             ResponseEntity.status(upstream.statusCode());
 
-                                    String setCookie = upstream.headers()
-                                            .asHttpHeaders()
-                                            .getFirst(HttpHeaders.SET_COOKIE);
-
-                                    if (setCookie != null) {
-                                        builder.header(HttpHeaders.SET_COOKIE, setCookie);
-                                    }
+                                    upstream.headers()
+                                            .header(HttpHeaders.SET_COOKIE)
+                                            .forEach(cookie ->
+                                                    builder.header(HttpHeaders.SET_COOKIE, cookie)
+                                            );
 
                                     return builder.body(body);
                                 })
