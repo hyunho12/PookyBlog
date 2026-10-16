@@ -1,32 +1,42 @@
 {{>layout/header}}
-<div class="page-shell">
+<div class="page-shell article-shell">
+    <a href="/#recent-posts" class="back-link"><i class="bi bi-arrow-left" aria-hidden="true"></i>최근 글로 돌아가기</a>
     <article class="surface-card post-article">
         <header class="post-article-header">
             <input type="hidden" id="id" value="{{posts.id}}">
             <h1 class="post-article-title">{{posts.title}}</h1>
             <div class="post-meta">
-                <span><i class="bi bi-person me-1"></i>{{posts.writer}}</span>
-                <span><i class="bi bi-calendar3 me-1"></i>{{posts.createdDate}}</span>
-                <span><i class="bi bi-eye me-1"></i>조회 <strong id="view-count">{{viewCount}}</strong></span>
-                <span><i class="bi bi-heart me-1"></i>좋아요 <strong id="like-count">{{likeCount}}</strong></span>
+                <span class="post-meta-author"><i class="bi bi-person-circle" aria-hidden="true"></i>{{posts.writer}}</span>
+                <span><i class="bi bi-calendar3" aria-hidden="true"></i>작성 {{posts.createdDate}}</span>
+                {{#posts.modifiedDate}}<span><i class="bi bi-pencil" aria-hidden="true"></i>수정 {{posts.modifiedDate}}</span>{{/posts.modifiedDate}}
+            </div>
+            <div class="post-stats" aria-label="게시글 반응">
+                <span><i class="bi bi-eye" aria-hidden="true"></i>조회 <strong id="view-count">{{viewCount}}</strong></span>
+                <span><i class="bi bi-heart" aria-hidden="true"></i>좋아요 <strong id="like-count">{{likeCount}}</strong></span>
+                <a href="#comments-heading"><i class="bi bi-chat-dots" aria-hidden="true"></i>댓글 <strong>{{commentCount}}</strong></a>
             </div>
         </header>
         <div class="post-body">{{posts.content}}</div>
-        <div class="post-actions d-flex flex-wrap justify-content-between gap-2">
-            <a href="/" class="btn btn-outline-secondary"><i class="bi bi-list-ul me-1"></i>목록</a>
-            <div class="d-flex flex-wrap gap-2">
+        <div class="post-actions">
+            <div class="post-like-actions">
                 {{#user}}
-                    <button type="button" id="btn-like" class="btn btn-outline-primary"><i class="bi bi-heart me-1"></i>좋아요</button>
-                    <button type="button" id="btn-unlike" class="btn btn-outline-secondary"><i class="bi bi-heartbreak me-1"></i>취소</button>
+                    {{^likeStateUnavailable}}
+                    <button type="button" id="btn-like" class="btn btn-outline-primary{{#liked}} is-liked{{/liked}}" aria-pressed="{{#liked}}true{{/liked}}{{#notLiked}}false{{/notLiked}}"><i class="bi bi-heart me-1" aria-hidden="true"></i>좋아요</button>
+                    <button type="button" id="btn-unlike" class="btn btn-link post-unlike">좋아요 취소</button>
+                    {{/likeStateUnavailable}}
+                    {{#likeStateUnavailable}}<span class="like-state-message" role="status">좋아요 상태를 확인할 수 없습니다.</span>{{/likeStateUnavailable}}
                 {{/user}}
+                {{^user}}<a href="/auth/login" class="post-login-prompt">로그인하고 좋아요 누르기</a>{{/user}}
+            </div>
+            <div class="post-management-actions">
                 {{#writer}}
-                    <a href="/posts/update/{{posts.id}}" class="btn btn-outline-primary"><i class="bi bi-pencil me-1"></i>수정</a>
-                    <button type="button" id="btn-delete" class="btn btn-outline-danger"><i class="bi bi-trash3 me-1"></i>삭제</button>
+                    <a href="/posts/update/{{posts.id}}" class="post-text-link">수정</a>
+                    <button type="button" id="btn-delete" class="post-text-link post-delete-link">삭제</button>
                 {{/writer}}
             </div>
         </div>
     </article>
-    <section class="mt-4" aria-labelledby="comments-heading">
+    <section class="comment-section" aria-labelledby="comments-heading">
         {{>comment/list}}
         {{>comment/form}}
     </section>

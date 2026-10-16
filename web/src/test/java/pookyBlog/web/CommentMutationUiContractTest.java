@@ -25,7 +25,8 @@ class CommentMutationUiContractTest {
                 .id(USER_ID).username("pooky").nickname("pooky").build();
 
         String html = compiler().compile(resource("templates/comment/list.mustache"))
-                .execute(Map.of("comments", List.of(comment), "user", authenticatedUser, "loggedIn", true));
+                .execute(Map.of("comments", List.of(comment), "commentCount", 1,
+                        "user", authenticatedUser, "loggedIn", true));
 
         assertThat(html)
                 .contains("class=\"btn-comment-edit dropdown-item\"")

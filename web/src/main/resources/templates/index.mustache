@@ -1,22 +1,66 @@
 {{>layout/header}}
-<div class="page-shell">
-    <div class="page-heading d-flex flex-column flex-sm-row justify-content-between align-items-sm-end gap-3">
-        <div><h1>게시글</h1><p>개발 경험과 생각을 자유롭게 나눠보세요.</p></div>
-        {{#user}}<a href="/posts/write" class="btn btn-primary"><i class="bi bi-pencil-square me-1"></i>새 글 작성</a>{{/user}}
-    </div>
-    <section class="surface-card overflow-hidden" aria-label="게시글 목록">
-        <div class="table-responsive">
-            <table class="table post-table" id="table">
-                <thead><tr><th scope="col">번호</th><th scope="col">제목</th><th scope="col">작성자</th><th scope="col">작성일</th><th scope="col">조회수</th></tr></thead>
-                <tbody>
-                {{#posts}}
-                    <tr><td>{{id}}</td><td class="post-title-cell"><a class="post-title-link" href="/posts/getPost/{{id}}">{{title}}</a></td><td><i class="bi bi-person me-1"></i>{{writer}}</td><td>{{createdDate}}</td><td><i class="bi bi-eye me-1"></i>{{viewCount}}</td></tr>
-                {{/posts}}
-                </tbody>
-            </table>
+<div class="page-shell home-shell">
+    <section class="home-intro" aria-labelledby="home-title">
+        <div>
+            <p class="eyebrow">PookyBlog</p>
+            <h1 id="home-title">좋은 글을 발견하고,<br>생각을 나누세요.</h1>
+            <p>새로운 이야기를 읽고, 오늘의 생각을 기록해 보세요.</p>
         </div>
-        {{^posts}}<div class="empty-state"><i class="bi bi-journal-text" aria-hidden="true"></i><h2 class="h5 text-dark">아직 작성된 게시글이 없습니다.</h2><p class="mb-0">첫 번째 이야기를 작성해 보세요.</p></div>{{/posts}}
+        <div class="home-intro-actions">
+            <a href="#recent-posts" class="btn btn-primary">글 둘러보기<i class="bi bi-arrow-right ms-2" aria-hidden="true"></i></a>
+            {{#user}}<a href="/posts/write" class="btn btn-outline-secondary">새 글 작성</a>{{/user}}
+            {{^user}}<a href="/auth/login" class="btn btn-outline-secondary">글쓰기</a>{{/user}}
+        </div>
     </section>
-    {{>posts/posts-page}}
+
+    <div class="home-content-grid">
+    <section id="recent-posts" class="recent-posts" aria-labelledby="recent-posts-title">
+        <div class="section-heading">
+            <div><p class="eyebrow">LATEST STORIES</p><h2 id="recent-posts-title">최근 게시글</h2></div>
+            <span class="section-caption">새로운 이야기를 살펴보세요</span>
+        </div>
+        {{#listLoadError}}
+        <div class="surface-card empty-state" role="alert"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><h3>게시글을 불러오지 못했습니다</h3><p>잠시 후 다시 시도해 주세요.</p><a href="/" class="btn btn-outline-primary">새로고침</a></div>
+        {{/listLoadError}}
+        {{^listLoadError}}
+        <div class="post-list">
+            {{#posts}}
+            <article class="post-list-item">
+                <div class="post-list-main">
+                    <h3><a class="post-title-link" href="/posts/getPost/{{id}}">{{title}}</a></h3>
+                    <div class="post-list-meta">
+                        <span class="post-list-author"><i class="bi bi-person-circle" aria-hidden="true"></i>{{writer}}</span>
+                        <span><i class="bi bi-calendar3" aria-hidden="true"></i>{{createdDate}}</span>
+                        <span class="post-list-views"><i class="bi bi-eye" aria-hidden="true"></i>조회 {{viewCount}}</span>
+                    </div>
+                </div>
+            </article>
+            {{/posts}}
+            {{^posts}}
+            <div class="surface-card empty-state"><i class="bi bi-journal-text" aria-hidden="true"></i>{{#hasPrev}}<h3>이 페이지에는 게시글이 없습니다</h3><p>이전 페이지에서 글을 살펴보세요.</p>{{/hasPrev}}{{^hasPrev}}<h3>아직 게시글이 없습니다</h3><p>첫 번째 이야기를 남겨보세요.</p>{{#user}}<a href="/posts/write" class="btn btn-outline-primary">첫 글 작성하기</a>{{/user}}{{/hasPrev}}</div>
+            {{/posts}}
+        </div>
+        {{#showPagination}}{{>posts/posts-page}}{{/showPagination}}
+        {{/listLoadError}}
+    </section>
+    <aside id="trending-posts" class="trending-posts" aria-labelledby="trending-posts-title">
+        <div class="section-heading">
+            <div><p class="eyebrow">TRENDING TODAY</p><h2 id="trending-posts-title">지금 주목받는 글</h2></div>
+        </div>
+        <div class="surface-card trending-panel">
+            {{#trendingUnavailable}}
+            <p class="trending-message" role="status">인기 글을 잠시 불러올 수 없습니다.</p>
+            {{/trendingUnavailable}}
+            {{^trendingUnavailable}}
+            <ol class="trending-list">
+                {{#trending}}
+                <li class="trending-item"><span class="trending-rank" aria-hidden="true">{{rank}}</span><a href="/posts/getPost/{{postId}}">{{title}}</a></li>
+                {{/trending}}
+            </ol>
+            {{^trending}}<p class="trending-message">아직 집계된 인기 글이 없습니다.</p>{{/trending}}
+            {{/trendingUnavailable}}
+        </div>
+    </aside>
+    </div>
 </div>
 {{>layout/footer}}

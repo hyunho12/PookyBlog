@@ -2,13 +2,19 @@ const main = {
     init() {
         this.showStoredFeedback();
         this.applyCommentOwnershipUi();
-        $('#btn-save').on('click', event => this.createPost(event.currentTarget));
-        $('#btn-update').on('click', event => this.updatePost(event.currentTarget));
+        $('input[required], textarea[required]').on('input', function () { this.setCustomValidity(''); });
+        $('#post-form').on('submit', event => {
+            event.preventDefault();
+            const button = event.currentTarget.querySelector('[type="submit"]');
+            if (button?.disabled) return;
+            if (button?.id === 'btn-save') this.createPost(button);
+            if (button?.id === 'btn-update') this.updatePost(button);
+        });
         $('#btn-delete').on('click', event => this.deletePost(event.currentTarget));
-        $('#btn-signup').on('click', event => this.signUp(event.currentTarget));
-        $('#btn-login').on('click', event => this.login(event.currentTarget));
+        $('#signup-form').on('submit', event => { event.preventDefault(); const button = event.currentTarget.querySelector('[type="submit"]'); if (!button?.disabled) this.signUp(button); });
+        $('#login-form').on('submit', event => { event.preventDefault(); const button = event.currentTarget.querySelector('[type="submit"]'); if (!button?.disabled) this.login(button); });
         $('#btn-logout').on('click', event => this.logout(event.currentTarget));
-        $('#btn-comment-save').on('click', event => this.commentSave(event.currentTarget));
+        $('#comment-form').on('submit', event => { event.preventDefault(); const button = event.currentTarget.querySelector('[type="submit"]'); if (!button?.disabled) this.commentSave(button); });
         $('.btn-comment-edit').on('click', event => this.toggleCommentEdit(event.currentTarget.dataset.commentId, true));
         $('.btn-comment-cancel').on('click', event => this.toggleCommentEdit(event.currentTarget.dataset.commentId, false));
         $('.btn-comment-update').on('click', event => this.commentUpdate(event.currentTarget));
@@ -16,7 +22,7 @@ const main = {
         $('#btn-like').on('click', event => this.like(event.currentTarget));
         $('#btn-unlike').on('click', event => this.unlike(event.currentTarget));
         const postId = $('#id').val();
-        if (postId && $('#view-count').length) this.increaseView(postId);
+        if (postId && $('#view-count').length && document.body.dataset.currentUser) this.increaseView(postId);
     },
 
     applyCommentOwnershipUi() {
@@ -35,8 +41,13 @@ const main = {
     validateForm(selector) {
         const form = document.querySelector(selector);
         if (!form) return true;
+        form.querySelectorAll('input[required], textarea[required]').forEach(field => {
+            field.setCustomValidity(field.value.trim() ? '' : '값을 입력해 주세요.');
+        });
         form.classList.add('was-validated');
-        return form.checkValidity();
+        const valid = form.checkValidity();
+        if (!valid) form.querySelector(':invalid')?.focus();
+        return valid;
     },
 
     setBusy(button, busy) {
@@ -73,7 +84,7 @@ const main = {
     },
 
     errorMessage(error, fallback = '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.') {
-        return error.responseJSON?.message || error.responseJSON?.error || error.responseText || fallback;
+        return error.responseJSON?.message || fallback;
     },
 
     escapeHtml(value) {
@@ -160,14 +171,19 @@ const main = {
 
     like(button) {
         const id = $('#id').val(); this.setBusy(button, true);
-        this.ajax('POST', `/api/posts/${id}/likes`).done(() => { this.showFeedback('이 게시글을 좋아합니다.'); this.refreshLikeCount(id); })
+        this.ajax('POST', `/api/posts/${id}/likes`).done(() => { this.setLikedState(true); this.showFeedback('이 게시글을 좋아합니다.'); this.refreshLikeCount(id); })
             .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
     },
 
     unlike(button) {
         const id = $('#id').val(); this.setBusy(button, true);
-        this.ajax('DELETE', `/api/posts/${id}/likes`).done(() => { this.showFeedback('좋아요를 취소했습니다.', 'secondary'); this.refreshLikeCount(id); })
+        this.ajax('DELETE', `/api/posts/${id}/likes`).done(() => { this.setLikedState(false); this.showFeedback('좋아요를 취소했습니다.', 'secondary'); this.refreshLikeCount(id); })
             .fail(error => this.showFeedback(this.errorMessage(error), 'danger')).always(() => this.setBusy(button, false));
+    },
+
+    setLikedState(liked) {
+        const button = $('#btn-like');
+        button.toggleClass('is-liked', liked).attr('aria-pressed', String(liked));
     },
 
     renderCount(selector, response) {

@@ -18,6 +18,8 @@ class UiTemplateContractTest {
 
     private static final List<String> UI_RESOURCES = List.of(
             "templates/index.mustache",
+            "templates/error/404.mustache",
+            "templates/error/500.mustache",
             "templates/comment/form.mustache",
             "templates/comment/list.mustache",
             "templates/layout/header.mustache",
@@ -35,7 +37,7 @@ class UiTemplateContractTest {
     @Test
     void uiResourcesPreserveUtf8KoreanWithoutReplacementText() throws IOException {
         assertThat(resource("templates/index.mustache"))
-                .contains("게시글", "개발 경험과 생각을 자유롭게 나눠보세요");
+                .contains("최근 게시글", "새로운 이야기를 읽고, 오늘의 생각을 기록해 보세요.");
         assertThat(resource("templates/layout/header.mustache"))
                 .contains("홈", "로그인", "회원가입");
         assertThat(resource("templates/posts/posts-write.mustache"))
@@ -81,13 +83,15 @@ class UiTemplateContractTest {
         for (String id : new String[]{"btn-save", "btn-update", "btn-delete", "btn-login",
                 "btn-signup", "btn-comment-save", "btn-like", "btn-unlike"}) {
             assertThat(templates).contains("id=\"" + id + "\"");
-            assertThat(javascript).contains("$('#" + id + "')");
         }
+        assertThat(javascript).contains("$('#post-form').on('submit'", "$('#login-form').on('submit'",
+                "$('#signup-form').on('submit'", "$('#comment-form').on('submit'",
+                "$('#btn-delete').on('click'", "$('#btn-like').on('click'", "$('#btn-unlike').on('click'");
     }
 
     @Test
     void indexRendersWithEmptyPostList() {
-        assertThat(renderIndex(List.of())).contains("아직 작성된 게시글이 없습니다.");
+        assertThat(renderIndex(List.of())).contains("아직 게시글이 없습니다");
     }
 
     @Test
@@ -97,7 +101,7 @@ class UiTemplateContractTest {
 
         assertThat(renderIndex(List.of(post)))
                 .contains("계약 테스트", "작성자", "2026.08.21")
-                .doesNotContain("아직 작성된 게시글이 없습니다.");
+                .doesNotContain("아직 게시글이 없습니다");
     }
 
     @Test
@@ -126,6 +130,16 @@ class UiTemplateContractTest {
                 .contains("this.renderCount('#like-count', count)")
                 .contains("this.renderCount('#view-count', count)")
                 .contains(".done(() => this.refreshViewCount(id))");
+    }
+
+    @Test
+    void errorPagesUseServiceLayoutAndProvideRecoveryLinks() throws IOException {
+        String notFound = resource("templates/error/404.mustache");
+        String serverError = resource("templates/error/500.mustache");
+        assertThat(notFound).contains("{{>layout/header}}", "{{>layout/footer}}",
+                "페이지를 찾을 수 없습니다", "href=\"/\"", "href=\"/#recent-posts\"");
+        assertThat(serverError).contains("{{>layout/header}}", "{{>layout/footer}}",
+                "잠시 문제가 발생했습니다", "다시 시도", "href=\"/\"");
     }
 
     private String renderIndex(List<PostListViewResponse> posts) {

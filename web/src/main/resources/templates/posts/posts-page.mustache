@@ -1,8 +1,7 @@
-<nav class="mt-4" aria-label="게시글 페이지">
-    <ul class="pagination justify-content-center mb-0">
-        {{#hasPrev}}<li class="page-item"><a class="page-link" href="?page={{previous}}" aria-label="이전 페이지"><i class="bi bi-chevron-left"></i><span class="ms-1">이전</span></a></li>{{/hasPrev}}
-        {{^hasPrev}}<li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i><span class="ms-1">이전</span></span></li>{{/hasPrev}}
-        {{#hasNext}}<li class="page-item"><a class="page-link" href="?page={{next}}" aria-label="다음 페이지"><span class="me-1">다음</span><i class="bi bi-chevron-right"></i></a></li>{{/hasNext}}
-        {{^hasNext}}<li class="page-item disabled"><span class="page-link"><span class="me-1">다음</span><i class="bi bi-chevron-right"></i></span></li>{{/hasNext}}
-    </ul>
+<nav class="post-pagination" aria-label="게시글 페이지">
+    {{#hasPrev}}<a class="pagination-link" href="?page={{previous}}&amp;size={{pageSize}}#recent-posts" aria-label="이전 페이지"><i class="bi bi-arrow-left" aria-hidden="true"></i>이전</a>{{/hasPrev}}
+    {{^hasPrev}}<span class="pagination-link is-disabled" aria-disabled="true"><i class="bi bi-arrow-left" aria-hidden="true"></i>이전</span>{{/hasPrev}}
+    <span class="pagination-current" aria-current="page">{{currentPage}}페이지</span>
+    {{#hasNext}}<a class="pagination-link" href="?page={{next}}&amp;size={{pageSize}}#recent-posts" aria-label="다음 페이지">다음<i class="bi bi-arrow-right" aria-hidden="true"></i></a>{{/hasNext}}
+    {{^hasNext}}<span class="pagination-link is-disabled" aria-disabled="true">다음<i class="bi bi-arrow-right" aria-hidden="true"></i></span>{{/hasNext}}
 </nav>

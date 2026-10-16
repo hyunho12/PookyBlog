@@ -25,6 +25,11 @@ import pookyBlog.common.Entity.User;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Map;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.Duration;
 
 @Slf4j
 @Controller
@@ -37,6 +42,9 @@ public class PostController {
     private final WebClient commentWebClient;
     private final WebClient likeWebClient;
     private final WebClient viewWebClient;
+    private final WebClient hotPostWebClient;
+
+    public record HotPostSummary(Long postId, String title, LocalDateTime createAt) {}
 
     /**
      * 메인 페이지: 게시글 목록을 페이징하여 보여주고, 로그인 상태를 표시합니다.
@@ -44,20 +52,38 @@ public class PostController {
     @GetMapping("/")
     public String index(Model model, @ModelAttribute PostSearch postSearch, @CookieValue(name = "jwtToken", required = false) String token) {
         log.debug("Accessing index page with search: {}", postSearch);
+        int currentPage = postSearch.getPage() == null ? 1 : Math.max(1, postSearch.getPage());
+        int pageSize = postSearch.getSize() == null ? 10 : Math.max(1, Math.min(499, postSearch.getSize()));
+        model.addAttribute("currentPage", currentPage);
+        model.addAttribute("pageSize", pageSize);
+        model.addAttribute("hasPrev", currentPage > 1);
+        model.addAttribute("previous", currentPage - 1);
+        model.addAttribute("showPagination", currentPage > 1);
 
         try {
-            // post-service에서 페이징된 게시글 목록 가져오기
-            // Page<T>는 직접 변환이 까다로우므로, 사용자 정의 Page 구현체나 List로 받는 것이 일반적입니다.
-            // 여기서는 List를 받는 방식으로 구현하고, 페이징 정보는 별도로 처리한다고 가정합니다.
+            // 목록 API에 전체 페이지 수가 없으므로 같은 크기의 다음 페이지를 조회해 이동 가능 여부만 확인합니다.
             List<PostListResponse> posts = postWebClient.get()
                     .uri(uriBuilder -> uriBuilder.path("/posts")
-                            .queryParam("page", postSearch.getPage())
-                            .queryParam("size", postSearch.getSize())
+                            .queryParam("page", currentPage)
+                            .queryParam("size", pageSize)
                             .build())
                     .retrieve()
                     .bodyToFlux(PostListResponse.class)
                     .collectList()
                     .block(); // 템플릿 렌더링을 위해 동기적으로 결과를 기다립니다.
+            boolean hasNext = !posts.isEmpty() && posts.size() == pageSize && !postWebClient.get()
+                    .uri(uriBuilder -> uriBuilder.path("/posts")
+                            .queryParam("page", currentPage + 1)
+                            .queryParam("size", pageSize)
+                            .build())
+                    .retrieve()
+                    .bodyToFlux(PostListResponse.class)
+                    .collectList()
+                    .block()
+                    .isEmpty();
+            model.addAttribute("hasNext", hasNext);
+            model.addAttribute("showPagination", currentPage > 1 || hasNext);
+            model.addAttribute("next", currentPage + 1);
 
             List<PostListViewResponse> postsWithViews;
             if (posts.isEmpty()) {
@@ -77,17 +103,35 @@ public class PostController {
 
             model.addAttribute("posts", postsWithViews);
 
-            // TODO: 실제 페이징 UI를 구현하려면 post-service의 API가 전체 페이지 수, 현재 페이지 등의 정보를 함께 반환해야 합니다.
-            // 예: 응답 객체를 { "content": [...], "totalPages": 10, "currentPage": 1 } 와 같이 설계
-            // model.addAttribute("currentPage", ...);
-            // model.addAttribute("totalPages", ...);
-
         } catch (WebClientResponseException e) {
             log.error("Failed to fetch posts from post-service. Status: {}, Body: {}", e.getStatusCode(), e.getResponseBodyAsString());
-            model.addAttribute("posts", List.of()); // 에러 발생 시 빈 목록 전달
+            model.addAttribute("posts", List.of());
+            model.addAttribute("listLoadError", true);
         } catch (Exception e) {
             log.error("An unexpected error occurred while fetching posts: {}", e.getMessage());
             model.addAttribute("posts", List.of());
+            model.addAttribute("listLoadError", true);
+        }
+
+        try {
+            String today = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+            List<HotPostSummary> hotPosts = hotPostWebClient.get()
+                    .uri("/hot-posts/date/{dateStr}", today)
+                    .retrieve()
+                    .bodyToFlux(HotPostSummary.class)
+                    .collectList()
+                    .timeout(Duration.ofSeconds(4))
+                    .block();
+            List<Map<String, Object>> trending = java.util.stream.IntStream.range(0, Math.min(5, hotPosts.size()))
+                    .mapToObj(index -> Map.<String, Object>of(
+                            "rank", String.format("%02d", index + 1),
+                            "postId", hotPosts.get(index).postId(),
+                            "title", hotPosts.get(index).title()))
+                    .toList();
+            model.addAttribute("trending", trending);
+        } catch (Exception e) {
+            log.warn("Failed to fetch trending posts: {}", e.getMessage());
+            model.addAttribute("trendingUnavailable", true);
         }
 
         // 로그인한 사용자 정보를 모델에 추가
@@ -137,6 +181,7 @@ public class PostController {
                         PostResponse post = tuple.getT1();
                         model.addAttribute("posts", post);
                         model.addAttribute("comments", tuple.getT2());
+                        model.addAttribute("commentCount", tuple.getT2().size());
                         model.addAttribute("likeCount", tuple.getT3());
                         model.addAttribute("viewCount", tuple.getT4());
 
@@ -148,6 +193,28 @@ public class PostController {
                             model.addAttribute("writer", false);
                         }
                     }).block();
+
+            User loginUser = (User) model.getAttribute("user");
+            if (loginUser != null) {
+                try {
+                    Boolean liked = likeWebClient.get()
+                            .uri(uriBuilder -> uriBuilder.path("/likes/exists/{postId}")
+                                    .queryParam("userId", loginUser.getId())
+                                    .build(id))
+                            .headers(headers -> setBearerAuth(headers, token))
+                            .retrieve().bodyToMono(Boolean.class)
+                            .timeout(Duration.ofSeconds(2)).block();
+                    if (liked == null) {
+                        model.addAttribute("likeStateUnavailable", true);
+                    } else {
+                        model.addAttribute("liked", liked);
+                        model.addAttribute("notLiked", !liked);
+                    }
+                } catch (Exception e) {
+                    log.warn("Failed to fetch like state for post {}: {}", id, e.getMessage());
+                    model.addAttribute("likeStateUnavailable", true);
+                }
+            }
 
         } catch (WebClientResponseException.NotFound e) {
             log.warn("Post not found for id: {}", id);
@@ -177,10 +244,10 @@ public class PostController {
             model.addAttribute("posts", postResponse);
         } catch (WebClientResponseException.NotFound e) {
             log.warn("Post not found for update with id: {}", id);
-            return "error/404";
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "게시글을 찾을 수 없습니다.", e);
         } catch (Exception e) {
             log.error("Failed to fetch post for update with id {}: {}", id, e.getMessage());
-            return "error/500";
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "게시글 조회에 실패했습니다.", e);
         }
 
         return "posts/posts-update";
