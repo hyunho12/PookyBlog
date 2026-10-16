@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import pookyBlog.common.outboxmessage.OutboxEventPublisher;
 import pookyBlog.common.snowflake.Snowflake;
 import pookyBlog.common.event.EventType;
@@ -65,7 +67,7 @@ public class PostService {
 
     public PostResponse get(Long postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 id입니다."));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "존재하지 않는 게시글입니다."));
 
         return PostResponse.builder()
                 .id(post.getId())

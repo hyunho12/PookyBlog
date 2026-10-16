@@ -66,6 +66,12 @@ class SecurityConfigTest {
     }
 
     @Test
+    void publicPostReadsSucceed() throws Exception {
+        mockMvc.perform(get("/posts")).andExpect(status().isOk());
+        mockMvc.perform(get("/posts/1")).andExpect(status().isOk());
+    }
+
+    @Test
     void authenticatedPostSucceedsWithoutCsrfToken() throws Exception {
         mockMvc.perform(post("/posts/create")
                         .header("Authorization", "Bearer valid-jwt")

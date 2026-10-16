@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(LikeApiController.class)
@@ -47,11 +48,13 @@ class SecurityConfigTest {
         mockMvc.perform(get("/likes/count/1").header("Authorization", "Bearer valid-jwt"))
                 .andExpect(status().isOk());
     }
-    @Test void missingBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/likes/count/1")).andExpect(status().isForbidden());
+    @Test void publicLikeCountIsAccepted() throws Exception {
+        mockMvc.perform(get("/likes/count/1")).andExpect(status().isOk());
     }
-    @Test void invalidBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/likes/count/1").header("Authorization", "Bearer invalid"))
+    @Test void likeMutationAndUserStateStillRequireAuthentication() throws Exception {
+        mockMvc.perform(post("/likes/1").param("userId", "1"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/likes/exists/1").param("userId", "1"))
                 .andExpect(status().isForbidden());
     }
 }
