@@ -30,6 +30,6 @@ public class PostLikedEventHandler implements EventHandler<PostLikedEventPayload
 
     @Override
     public Long findPostId(Event<PostLikedEventPayload> event) {
-        return event.getPayload().getPostLikeId();
+        return event.getPayload().getPostId();
     }
 }

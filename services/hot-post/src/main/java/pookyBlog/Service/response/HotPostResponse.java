@@ -15,7 +15,7 @@ public class HotPostResponse {
 
     public static HotPostResponse from(PostClient.PostResponse postResponse){
         HotPostResponse response = new HotPostResponse();
-        response.postId = postResponse.getPostId();
+        response.postId = postResponse.getId();
         response.title = postResponse.getTitle();
         response.createAt = postResponse.getCreateAt();
         return response;

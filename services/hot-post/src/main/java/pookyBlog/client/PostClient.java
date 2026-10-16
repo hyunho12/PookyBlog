@@ -38,7 +38,7 @@ public class PostClient {
 
     @Getter
     public static class PostResponse{
-        private Long postId;
+        private Long id;
         private String title;
         private LocalDateTime createAt;
     }

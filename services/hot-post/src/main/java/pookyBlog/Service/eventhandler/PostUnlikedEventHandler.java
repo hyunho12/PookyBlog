@@ -30,6 +30,6 @@ public class PostUnlikedEventHandler implements EventHandler<PostUnlikedEventPay
 
     @Override
     public Long findPostId(Event<PostUnlikedEventPayload> event) {
-        return event.getPayload().getPostLikeId();
+        return event.getPayload().getPostId();
     }
 }

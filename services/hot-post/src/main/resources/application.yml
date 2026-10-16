@@ -22,4 +22,4 @@ spring:
       enable-auto-commit: false
   endpoints:
     pooky-board-post-service:
-      url: http://127.0.0.1:3307
+      url: http://127.0.0.1:8083

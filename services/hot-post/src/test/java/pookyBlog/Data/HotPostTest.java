@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import pookyBlog.Repository.HotPostListRepository;
 import pookyBlog.Repository.PostCreatedTimeRepository;
@@ -30,6 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("test")
+@EnabledIfEnvironmentVariable(named = "POOKY_RUN_EXTERNAL_INTEGRATION_TESTS", matches = "true")
 public class HotPostTest {
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
@@ -40,17 +41,13 @@ public class HotPostTest {
     @Autowired
     private PostCreatedTimeRepository postCreatedTimeRepository;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final Long postId = 777L;
+    private final Long postId = UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
     private final String dateStr = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
     @BeforeEach
     void setUp() {
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
         postCreatedTimeRepository.createOrUpdate(
                 postId,
                 LocalDateTime.now(),
