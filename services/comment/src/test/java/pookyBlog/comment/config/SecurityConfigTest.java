@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommentApiController.class)
@@ -47,11 +48,11 @@ class SecurityConfigTest {
         mockMvc.perform(get("/api/posts/1").header("Authorization", "Bearer valid-jwt"))
                 .andExpect(status().isOk());
     }
-    @Test void missingBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/api/posts/1")).andExpect(status().isForbidden());
+    @Test void publicCommentReadIsAccepted() throws Exception {
+        mockMvc.perform(get("/api/posts/1")).andExpect(status().isOk());
     }
-    @Test void invalidBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/api/posts/1").header("Authorization", "Bearer invalid"))
+    @Test void commentMutationStillRequiresAuthentication() throws Exception {
+        mockMvc.perform(post("/api/comments/create"))
                 .andExpect(status().isForbidden());
     }
 }

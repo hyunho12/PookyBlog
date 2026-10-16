@@ -22,6 +22,7 @@ import java.util.List;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PostViewController.class)
@@ -47,11 +48,13 @@ class SecurityConfigTest {
         mockMvc.perform(get("/post-view/1/count").header("Authorization", "Bearer valid-jwt"))
                 .andExpect(status().isOk());
     }
-    @Test void missingBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/post-view/1/count")).andExpect(status().isForbidden());
+    @Test void publicViewReadsAreAccepted() throws Exception {
+        mockMvc.perform(get("/post-view/1/count")).andExpect(status().isOk());
+        mockMvc.perform(post("/post-view/counts").contentType("application/json")
+                .content("{\"postIds\":[1]}")).andExpect(status().isOk());
     }
-    @Test void invalidBearerIsRejected() throws Exception {
-        mockMvc.perform(get("/post-view/1/count").header("Authorization", "Bearer invalid"))
+    @Test void viewMutationStillRequiresAuthentication() throws Exception {
+        mockMvc.perform(post("/post-view/1/users/1"))
                 .andExpect(status().isForbidden());
     }
 }
