@@ -10,7 +10,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import pookyBlog.common.Dto.Response.ErrorResponse;
 
-@RestControllerAdvice
+@RestControllerAdvice(assignableTypes = {
+        PostProxyController.class, CommentProxyController.class, LikeProxyController.class,
+        ViewProxyController.class, UserAuthProxyController.class
+})
 public class DownstreamExceptionHandler {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
